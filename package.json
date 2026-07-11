@@ -1,0 +1,27 @@
+{
+  "name": "mearm-live-viewer",
+  "version": "0.9.0",
+  "private": true,
+  "description": "A lightweight browser-based 3D previewer for beginner MeArm Arduino dance sketches.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:offline": "node scripts/verify-offline.mjs",
+    "check": "npm test && npm run typecheck && npm run build && npm run verify:offline"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
+  }
+}
