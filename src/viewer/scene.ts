@@ -10,13 +10,13 @@ export class MeArmScene {
   private readonly renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   private readonly controls: OrbitControls;
   private readonly model: MeArmModel;
-  private readonly grid = new THREE.GridHelper(420, 21, 0x37645c, 0x17332e);
+  private readonly grid = new THREE.GridHelper(420, 21, 0xa8bab2, 0xd6e0db);
   private readonly axes = new THREE.AxesHelper(55);
   private readonly resizeObserver: ResizeObserver;
 
   constructor(private readonly container: HTMLElement, profile: RobotProfile) {
-    this.scene.background = new THREE.Color(0x071512);
-    this.scene.fog = new THREE.FogExp2(0x071512, 0.0019);
+    this.scene.background = new THREE.Color(0xeef3f0);
+    this.scene.fog = new THREE.FogExp2(0xeef3f0, 0.0019);
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -38,7 +38,7 @@ export class MeArmScene {
     this.controls.maxPolarAngle = Math.PI * 0.49;
     this.controls.target.set(0, 75, 65);
 
-    const ambient = new THREE.HemisphereLight(0xc8fff4, 0x0d211d, 2.25);
+    const ambient = new THREE.HemisphereLight(0xffffff, 0xc8d5cf, 2.25);
     const key = new THREE.DirectionalLight(0xfff1d8, 3.2);
     key.position.set(-140, 260, 120);
     key.castShadow = true;
@@ -51,7 +51,7 @@ export class MeArmScene {
 
     const floor = new THREE.Mesh(
       new THREE.CircleGeometry(245, 64),
-      new THREE.MeshStandardMaterial({ color: 0x0b211d, roughness: 0.92 }),
+      new THREE.MeshStandardMaterial({ color: 0xe4ebe7, roughness: 0.92 }),
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
