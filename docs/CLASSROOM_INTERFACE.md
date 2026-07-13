@@ -2,71 +2,118 @@
 
 ## Code workflow
 
-The interface ships with the instructor dance and student starter sketches.
-Selecting a sample loads its complete source into a native text editor. Editing
-the source changes the sample label to “Edited sketch” and marks the preview as
-out of date.
+The **Example** menu provides three starting sketches:
 
-Selecting **Preview code** or pressing Ctrl/Command + Enter performs the full
-safe pipeline:
+| Example | Intended use | Additional validation |
+| --- | --- | --- |
+| Instructor dance | Complete demonstration sequence | Approved-pose cautions plus normal kinematics and limits |
+| Student starter | Guided editing exercise with commented pose menu | Approved-pose cautions plus normal kinematics and limits |
+| Free form | Minimal sketch for coordinate exploration | X `-100..100`, Y `100..200`, Z `0..150` mm, then normal kinematics and limits |
 
-1. Validate the active robot profile.
-2. Tokenize and parse the documented Arduino subset.
-3. Build and validate the deterministic motion timeline.
-4. Recreate the 3D arm for the active link lengths.
-5. Draw the new path and reset playback to the first command.
+Selecting an example replaces the editor content and immediately builds a
+preview. Editing changes the menu label to **Edited sketch** and marks the
+preview as out of date. **Reset code** restores the original source for the
+active example.
 
-Pasted source is never executed as JavaScript or arbitrary C++.
+Select **Preview code** or press Ctrl/Command + Enter to:
 
-## Diagnostics and source linking
+1. validate the active simulation profile;
+2. tokenize and parse the documented Arduino subset;
+3. apply Free form bounds when that example is active;
+4. build and validate the deterministic motion timeline;
+5. recreate the 3D arm for the current link lengths; and
+6. draw the path, command markers, coordinate labels, and first frame.
 
-Parser errors include their source line and column. The message appears above
-the editor and the relevant source line is selected automatically. During
-playback, the current command's line number is highlighted in the gutter. The
-line link in the inspector returns keyboard focus and selection to that command.
+Pasted source is never executed as JavaScript or arbitrary C++. Playback is
+paused by default and repetition is opt-in.
 
-Unsupported syntax stops preview creation. Invalid motion stops the normal
-timeline at the first invalid command. Caution and invalid states use both text
-and color.
+## Editor and source navigation
 
-## Playback controls
+The code area uses a native textarea over an escaped syntax-highlight layer.
+Line numbers remain synchronized with editing and scrolling.
 
-The classroom interface provides:
+After a successful preview, executable `loop()` lines receive clickable command
+markers in the gutter. A marker pauses playback and jumps to the start of that
+command. If several commands share a line, the marker targets the first one.
+The inspector's **Line N · Command X of Y** link selects the corresponding
+source line and returns focus to the editor.
 
-- play and pause,
-- restart,
-- previous- and next-command stepping,
-- timeline scrubbing,
-- `0.25x`, `0.5x`, `1x`, `2x`, and `4x` speeds,
-- optional loop repetition,
-- Space keyboard shortcut when focus is outside an input or editor.
+Parser and Free form bound errors show a line-linked message and select the
+relevant source. Unsupported syntax prevents preview creation. An invalid
+movement truncates the normal timeline at the first invalid point. Valid,
+caution, invalid, and code-error states are conveyed with text as well as
+color.
 
-Users who prefer reduced motion begin with playback paused.
+## 3D viewport
+
+The stage provides:
+
+- mouse or touch orbit and zoom through Three.js OrbitControls;
+- **Fit** and **Reset** camera actions;
+- Isometric, Front, Back, Left, Right, and Top camera presets;
+- independent Path, Grid, and Axes visibility controls;
+- X/Y/Z axis labels and a color key; and
+- coordinate labels for unique destinations in the current path.
+
+The 3D canvas is accompanied by the motion inspector, so command, position,
+joint angle, timing, and status information remains available as text.
+
+## Playback and inspection
+
+The inspector provides:
+
+- Play/Pause, Restart, Back, and Next;
+- timeline scrubbing;
+- `0.25x`, `0.5x`, `1x`, `2x`, and `4x` speeds;
+- optional loop repetition;
+- elapsed and total simulated time;
+- current command and source location;
+- claw X/Y/Z coordinates and base/shoulder/elbow angles; and
+- a persistent physical-robot safety reminder.
+
+Space toggles playback when focus is not in the editor, a text/number input, or
+a select. Scrubbing or jumping to a command pauses playback. Editing while a
+preview is stale triggers recompilation before Play can continue.
+
+## Copyable classroom commands
+
+The **Preset commands** section copies complete `arm.moveToXYZ(...)` statements
+for HOME, LEFT, RIGHT, HIGH, and LOW. It also copies `delay(...)` statements for
+250, 500, 1000, and 2000 milliseconds. Copy status is announced in a live
+status region, and a fallback copy path is used when the Clipboard API is not
+available.
+
+Presets are editing aids, not proof of physical safety. The approved pose list
+comes from the default profile and must still be checked on the classroom arm.
 
 ## Instructor settings
 
-The settings dialog changes only the simulation profile. It supports:
+The modal settings dialog exposes:
 
-- `L1`, `L2`, and `L3` in millimeters,
-- HOME `x`, `y`, and `z` in millimeters,
+- `L1`, `L2`, and `L3` in millimeters;
+- HOME `x`, `y`, and `z` in millimeters; and
 - minimum and maximum base, shoulder, and elbow angles in degrees.
 
-Values must be finite, link lengths and timing values must be positive, `L3`
-must be non-negative, and each minimum must not exceed its maximum. Applying a
-profile reparses the current sketch and rebuilds both timeline and arm geometry.
+Values must be finite, `L1` and `L2` must be positive, `L3` must be
+non-negative, and each minimum must not exceed its maximum. **Reset defaults**
+restores the MeArm v3 classroom values in the form; **Apply and preview**
+validates them, rebuilds the timeline, and recreates the arm.
 
-**Reset defaults** restores the documented MeArm v3 classroom profile. Settings
-are deliberately not described as hardware calibration and are not sent to the
-Arduino.
+These values change only the current in-memory simulation. They are not saved,
+sent to an Arduino, or described as hardware calibration.
 
 ## Responsive and accessible behavior
 
 - Desktop uses adjacent editor, scene, and inspector regions.
-- Medium screens place the inspector below the editor and scene.
-- Small screens stack all three regions and enlarge controls for touch.
-- Every interactive element has a visible keyboard focus indicator.
-- Statuses have textual labels rather than relying on color.
-- The code editor has a programmatic label, line count, and linked diagnostics.
-- Dialog fields use visible labels, groups, units, and an alert region.
+- Medium layouts reorganize the inspector while keeping all controls.
+- Narrow layouts stack the workspace and preserve touch-sized controls.
+- Interactive elements have visible keyboard focus indicators.
+- The editor, gutter markers, timeline, canvas, toolbars, status regions, and
+  settings fields have programmatic labels.
+- Status meaning never depends on color alone.
+- The app starts paused for all users, including reduced-motion users.
 
-Formal browser and visual accessibility validation remains part of Phase 4.
+Automated contracts cover required controls, labels, focus CSS, responsive
+rules, and offline assets. Manual keyboard-only, assistive-technology,
+cross-browser, and touch validation remains recommended before broad classroom
+deployment; see [VALIDATION_REPORT.md](VALIDATION_REPORT.md).

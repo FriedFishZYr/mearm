@@ -4,73 +4,92 @@
 
 - Product: MeArm Classroom Motion Lab
 - Candidate version: 0.9.0
-- Review date: 2026-07-11
-- Status: browser-validated release candidate; physical validation intentionally deferred
+- Documentation review: 2026-07-13
+- Status: software release candidate; final browser and physical gates remain
 
-## Automated results
+## Current automated results
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Unit and integration tests | Pass | 39 tests across 8 files |
-| Classroom sample parsing | Pass | Instructor and student fixtures |
-| Approved pose endpoint accuracy | Pass | All five poses within 0.5 mm |
+| Unit, integration, and interface-contract tests | Pass | 46 tests across 9 files |
+| Bundled classroom sketches | Pass | Instructor and Student parsing plus Free form mode contracts |
+| Approved pose endpoint accuracy | Pass | All five poses solve; round trips stay within 0.5 mm |
+| Free form coordinate envelope | Pass | Inclusive limits and out-of-bounds rejection covered |
 | Strict TypeScript checking | Pass | No diagnostics |
 | Production build | Pass | Static Vite output generated |
-| Production HTTP smoke test | Pass | Entry page and both generated assets returned successfully |
-| Offline runtime assets | Pass | Document references only local build assets |
-| Dependency audit | Pass | No known vulnerabilities reported |
-| External fonts, scripts, or styles | None | Offline verifier checks generated HTML and CSS |
+| Offline runtime assets | Pass | Generated document/CSS references are local |
+| Required release CSS | Pass | Focus, responsive, and reduced-motion rules found |
 
-The production JavaScript bundle is approximately 150 KB compressed. The build
-tool reports that its uncompressed Three.js-containing chunk exceeds the
-default 500 KB advisory threshold. This is a performance advisory, not a build
-failure; no additional runtime dependency was introduced.
+The 2026-07-13 production build generated approximately 605.22 kB of
+JavaScript (155.10 kB gzip) and 21.73 kB of CSS (5.11 kB gzip). Vite reports a
+non-blocking advisory because the minified Three.js-containing JavaScript chunk
+exceeds 500 kB. This is a performance consideration, not a correctness failure.
 
-## Accessibility and responsive source checks
+A dependency audit recorded on 2026-07-11 reported no known vulnerabilities.
+It was not rerun as part of this documentation-only review.
 
-Automated source contracts confirm:
+## Automated interface contracts
 
-- accessible names for the code editor, timeline, canvas, and servo-limit
-  fields,
-- textual valid, caution, invalid, and code-error states,
-- visible `:focus-visible` rules,
-- keyboard shortcuts and native dialog behavior,
-- reduced-motion startup behavior,
-- desktop, medium, and small-screen layout rules.
+Source-level tests confirm the presence and wiring contracts for:
 
-These checks do not replace interaction with a real browser or assistive
-technology.
+- accessible names for the editor, command-marker gutter, timeline, canvas,
+  settings fields, preset groups, and Free form limits;
+- textual valid, caution, invalid, and code-error states;
+- disabling playback after a failed preview;
+- copyable approved-pose and delay commands;
+- clickable command markers and timeline scrubbing;
+- Instructor, Student, and Free form sample selection; and
+- viewport, settings, and playback controls.
 
-## Interactive browser validation
+The offline verifier also checks `:focus-visible`, narrow responsive layout,
+and reduced-motion CSS. These source contracts do not replace interaction with
+a real browser or assistive technology.
 
-The production preview was exercised in the Codex in-app Chromium browser at
-the default 1274 x 974 viewport and at a 390 x 844 phone viewport.
+## Recorded interactive browser evidence
 
-| Check | Result | Evidence |
-| --- | --- | --- |
-| Initial WebGL render | Pass | Arm, grid, path, status, and inspector rendered |
-| Sample switching | Pass | Instructor sample loaded 29 commands; student sample also loaded |
-| Parser diagnostics | Pass | Unsupported control flow selected and reported source line 3 |
-| Invalid-preview safety | Pass | Playback disabled instead of retaining an old valid timeline |
-| Playback | Pass | Play/pause timing, restart, next command, and 2x speed selection checked |
-| Viewer options | Pass | Axes toggle changed state; canvas remained visible |
-| Settings | Pass | Zero-length L1 was rejected; reset/apply restored a valid preview |
-| Phone layout | Pass | All three regions remained available with no horizontal overflow |
-| Console errors | Pass | No console errors observed |
+The production preview was previously exercised in the Codex in-app Chromium
+browser at 1274 × 974 and 390 × 844. That pass covered:
 
-This browser pass does not claim full cross-browser, touch-gesture, assistive
-technology, keyboard-only, reduced-motion, or network-disconnected manual
-coverage. Those checks remain recommended before broad classroom deployment;
-the generated build's offline asset contract is covered automatically.
+- initial WebGL rendering;
+- Instructor and Student sample switching;
+- line-linked parser diagnostics;
+- disabling stale playback after an invalid preview;
+- play/pause, restart, next command, timeline, and speed behavior;
+- axes visibility;
+- invalid and restored settings;
+- phone-width layout without horizontal overflow; and
+- a clean browser console.
 
-## Deferred: physical MeArm comparison
+A later UI-refinement pass checked 1280 × 720, 1024 × 800, and 375 × 812,
+including Play/Pause and previous/next command smoke checks, with no reported
+horizontal overflow or console errors.
 
-The classroom MeArm is not yet fully assembled, so physical comparison is
-paused. Complete the protocol in `PHYSICAL_VALIDATION.md` after assembly and
-calibration, before approving version 1.0.
+## Remaining manual browser gate
+
+The recorded passes do not explicitly cover every feature added afterward.
+Before 1.0, verify the current production build for:
+
+1. Free form limit display, inclusive boundary values, and line-linked failures;
+2. pose and delay clipboard actions, including visible/announced feedback;
+3. gutter command checkpoints and the inspector source-line link;
+4. Reset code for all three active examples;
+5. every camera preset and viewport visibility toggle;
+6. repeat, Back, scrub, and all playback speeds;
+7. keyboard-only navigation and visible focus;
+8. current Chrome and Edge behavior at desktop and touch widths;
+9. reduced-motion and assistive-technology behavior; and
+10. a production reload with network access disabled.
+
+## Deferred physical comparison
+
+The classroom MeArm is not yet fully assembled. Complete
+[PHYSICAL_VALIDATION.md](PHYSICAL_VALIDATION.md) after assembly and calibration.
+All five approved poses, claw direction, stops, clearance, timing/order, and a
+complete instructor dance must pass before 1.0 approval.
 
 ## Release decision
 
-Version 0.9.0 is suitable for local web demonstrations and future classroom-arm
-validation. Software work is paused at this checkpoint. It is not yet approved
-as a classroom-ready 1.0 release.
+Version 0.9.0 is suitable for local demonstrations and continued review. The
+automated software gate is green, but the release is not yet approved as a
+classroom-ready 1.0 because the final manual browser gate and physical-arm
+protocol remain open.

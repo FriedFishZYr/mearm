@@ -1,30 +1,33 @@
 # Project handoff
 
-## Stopping point
+## Current checkpoint
 
-Development is paused at version 0.9.0 after successful software and Chromium
-browser validation. The physical MeArm comparison is deferred because assembly
-is incomplete. No software blocker is known for local demonstrations.
+Development is at version 0.9.0. The deterministic core, 3D viewer, classroom
+workspace, three example modes, Free form bounds, copyable presets, and code
+checkpoints are implemented. The automated release gate is green; physical
+MeArm comparison is deferred until the target arm is assembled and calibrated.
 
-## Start the website
+No known software blocker prevents local demonstrations. The newest interface
+flows still need an explicit manual browser pass before a classroom-ready 1.0.
 
-From the `mearm` project folder:
+## Start the application
+
+From the repository root:
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally `http://localhost:5173/`.
+Open the URL printed by Vite. The app initially loads the Instructor dance and
+starts paused. The other bundled examples are Student starter and Free form.
 
-To inspect the production build:
+To serve the optimized build:
 
 ```sh
 npm run build
 npm run preview
 ```
-
-The preview URL is normally `http://localhost:4173/`.
 
 ## Re-run the release gate
 
@@ -32,28 +35,54 @@ The preview URL is normally `http://localhost:4173/`.
 npm run check
 ```
 
-This runs the tests, strict type check, production build, and offline asset
-verification. A clean result currently reports 39 passing tests.
+This runs 46 tests across 9 files, strict TypeScript checking, a production
+build, and offline verification. The build currently emits a non-blocking
+advisory because the minified Three.js-containing JavaScript chunk exceeds
+500 kB; its current gzip size is about 155 kB.
 
-## Recommended use now
+## High-value manual browser checks
 
-- Demonstrate the instructor and student sketches.
-- Paste or edit code that follows `SKETCH_LANGUAGE.md`.
-- Treat reachability and servo-limit results as simulation guidance.
-- Keep the on-screen physical-safety reminder visible during instruction.
+Run the production preview and confirm:
 
-## Work intentionally deferred
+1. all three samples load and render;
+2. out-of-range Free form coordinates report the correct axis and source line;
+3. each pose and delay preset copies the expected complete command;
+4. gutter checkpoints and the inspector source link jump to the right command;
+5. Reset code restores the active sample;
+6. play, pause, restart, Back, Next, scrub, repeat, and every speed work;
+7. Fit, Reset, camera presets, Path, Grid, and Axes work;
+8. invalid code disables playback instead of leaving a stale preview active;
+9. settings validation and Reset defaults behave correctly; and
+10. keyboard focus, narrow layouts, and the console remain clean.
 
-When the arm is assembled, complete `PHYSICAL_VALIDATION.md`. Record the exact
-link lengths, servo limits, home pose, pin assignments, power arrangement, and
-differences between simulated and physical motion. Any calibration changes must
-be reflected in the robot profile and revalidated with `npm run check`.
+Also perform current Chrome and Edge, keyboard-only, reduced-motion,
+touch-width, and network-disabled production checks before broad deployment.
 
-Before a broad classroom 1.0 release, also consider manual checks in current
-Chrome and Edge, touch gestures, keyboard-only navigation, an assistive
-technology pass, reduced-motion behavior, and a network-disconnected reload.
+## Physical validation
+
+When the arm is ready, complete
+[PHYSICAL_VALIDATION.md](PHYSICAL_VALIDATION.md). Record the robot identifier,
+board, pins, supply, servos, profile values, tester, and date. Compare HOME,
+LEFT, RIGHT, HIGH, LOW, the claw directions, and one complete instructor dance.
+
+Any binding, hard-stop contact, collision, unexpected direction, heat, or
+persistent buzzing blocks approval until the hardware or simulation profile is
+corrected and the protocol is repeated.
+
+## Important implementation boundaries
+
+- `src/core/` is deterministic and renderer-independent.
+- `src/app/preview.ts` is the compile boundary for profile, parser, mode bounds,
+  and timeline errors.
+- `src/main.ts` coordinates UI state; it should not absorb kinematics formulas.
+- `src/viewer/` owns timeline sampling and Three.js resources.
+- Free form bounds are mode-specific; they are not a replacement for IK or
+  servo-limit checks.
+- Settings are temporary simulation values and are not persisted or sent to
+  hardware.
 
 ## Release rule
 
-Do not label the project 1.0 or claim physical accuracy until every acceptance
-requirement in `PHYSICAL_VALIDATION.md` passes on the completed classroom arm.
+Do not label the application classroom-ready 1.0 until the latest browser
+flows are signed off and every physical acceptance requirement passes on the
+intended classroom arm.

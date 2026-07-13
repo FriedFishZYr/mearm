@@ -40,7 +40,11 @@ The model includes:
 - horizontal hand and two animated claw fingers,
 - glowing target marker,
 - optional target path,
-- optional reference grid and coordinate axes.
+- optional reference grid and coordinate axes, and
+- coordinate labels for unique destinations in the parsed path.
+
+The scene also provides orbit/zoom, fit/reset, and Isometric, Front, Back,
+Left, Right, and Top camera views.
 
 ## Playback
 
@@ -49,9 +53,10 @@ Movement is visually interpolated between the library-equivalent 50 ms samples
 so animation remains smooth while command endpoints and timing remain exact.
 Claw openness is interpolated across the library's 300 ms command delay.
 
-Playback begins with the setup-computed initial loop state and repeats the
-instructor dance timeline. Scrubbing and speed changes affect simulation time,
-not the source command data.
+Playback begins paused at the setup-computed initial loop state. It plays the
+active sample or edited timeline once unless the user enables **Repeat loop**.
+Scrubbing, command jumps, and speed changes affect simulation time, not the
+source command data.
 
 ## Status colors
 

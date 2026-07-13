@@ -26,12 +26,14 @@ the command responsible for a pose, and identify warnings before upload.
 ## Core workflow
 
 1. Open the viewer.
-2. Paste a supported `.ino` sketch or load a provided classroom example.
-3. Select **Preview**.
+2. Edit a supported `.ino` sketch or load the Instructor, Student, or Free form
+   example.
+3. Select **Preview code** or press Ctrl/Command + Enter.
 4. If parsing succeeds, see the arm at its initial/home pose and a timeline of
    commands.
 5. Play, pause, scrub, restart, or change playback speed.
-6. Select a movement in the timeline to highlight its source line and path.
+6. Scrub the timeline, use Back/Next, or select a gutter checkpoint to inspect
+   a command and its source line.
 7. Review any reachability, servo-limit, or “not physically verified” warnings.
 8. Return to the Arduino editor for changes and repeat.
 
@@ -40,7 +42,10 @@ the command responsible for a pose, and identify warnings before upload.
 ### Sketch input
 
 - Provide a plain-text code editor or paste area.
-- Ship with the instructor and student dance examples as samples.
+- Ship with Instructor dance, Student starter, and Free form examples.
+- In Free form mode, reject movement coordinates outside the inclusive X
+  `-100..100`, Y `100..200`, and Z `0..150` millimeter envelope before normal
+  kinematic validation.
 - Parse only the documented subset in `SKETCH_LANGUAGE.md`.
 - Never execute pasted JavaScript, C++, HTML, or arbitrary expressions.
 - Report an unsupported statement with its line number and a beginner-friendly
@@ -58,6 +63,9 @@ the command responsible for a pose, and identify warnings before upload.
 - Show axes and a ground/reference grid that can be hidden.
 - Allow orbit, zoom, and reset-camera actions.
 - Keep the arm visually readable on classroom projectors and small laptops.
+- Provide fit/reset actions and Isometric, Front, Back, Left, Right, and Top
+  camera presets.
+- Label unique movement destinations with their X/Y/Z coordinates.
 
 ### Playback
 
@@ -76,6 +84,8 @@ the command responsible for a pose, and identify warnings before upload.
 - Draw an optional trail for the claw target.
 - Mark commands as valid, warning, unsupported, or invalid.
 - Keep warnings visible when playback is paused or scrubbed.
+- Link parsed commands to clickable source-gutter checkpoints.
+- Provide copyable complete commands for approved poses and common delays.
 
 ### Configuration
 
@@ -94,8 +104,9 @@ the command responsible for a pose, and identify warnings before upload.
 | Invalid | IK fails or a configured servo angle is exceeded | Stop before the command by default |
 | Unsupported | The parser cannot safely interpret the source | Do not build a timeline |
 
-The instructor may preview an invalid command only in an explicit diagnostic
-mode. The arm must then be colored red and must not imply physical safety.
+Invalid motion truncates the normal timeline at the first invalid command.
+Unsupported code prevents timeline creation, and playback remains disabled
+until a valid preview is built.
 
 ## Accessibility and classroom usability
 
@@ -108,14 +119,15 @@ mode. The arm must then be colored red and must not imply physical safety.
 
 ## Acceptance criteria for the first release
 
-- Both existing classroom dance sketches parse without false commands from
-  comments.
+- Both classroom lesson sketches parse without false commands from comments,
+  and the Free form starter builds a valid preview.
 - HOME, LEFT, RIGHT, HIGH, and LOW animate to their documented coordinates.
 - The displayed endpoint is within 0.5 mm of the requested valid target.
 - At `1x`, command timing agrees with the source library model within one
   animation frame plus 10 ms.
 - Unreachable coordinates produce an actionable line-numbered error.
-- Refreshing the page restores a working sample without a network request.
+- Refreshing a locally served production build restores a working sample
+  without an external network request.
 - A production build opens without console errors in the supported browsers.
 
 ## Future possibilities

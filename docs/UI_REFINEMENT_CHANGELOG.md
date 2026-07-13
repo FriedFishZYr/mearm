@@ -86,7 +86,8 @@ data flow.
 
 ## Verification
 
-- All 43 automated tests across 9 test files pass.
+- All 46 automated tests across 9 test files pass after the follow-up feature
+  work described below.
 - Strict TypeScript checking passes.
 - The optimized Vite production build passes.
 - The final inspector was visually checked at 1280 x 720, 1024 x 800, and
@@ -95,3 +96,19 @@ data flow.
 
 The existing Vite advisory for the uncompressed Three.js bundle remains a
 non-blocking performance notice and is unrelated to these UI refinements.
+
+## 2026-07-13: classroom editing follow-up
+
+- Added copyable HOME, LEFT, RIGHT, HIGH, LOW, and common delay commands to the
+  inspector.
+- Added a minimal Free form example with inclusive X `-100..100`, Y `100..200`,
+  and Z `0..150` millimeter validation and an on-canvas limits reminder.
+- Added Reset code for restoring the active bundled example.
+- Added accessible, clickable command checkpoints in the editor gutter.
+- Changed startup and repeat defaults so playback begins paused and repeat is
+  opt-in.
+- Added automated contracts for the new controls, clipboard wiring, bounds,
+  and command navigation.
+
+These follow-up flows have automated coverage. They remain listed in
+`VALIDATION_REPORT.md` for an explicit final production-browser pass.

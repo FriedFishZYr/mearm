@@ -12,7 +12,7 @@ emulator.
 
 ## Supported structure
 
-The initial parser recognizes:
+The current parser recognizes:
 
 - line and block comments,
 - `#include` lines, which are ignored after lexical validation,
@@ -40,6 +40,11 @@ For the first release, coordinates and delays must be finite numeric literals.
 Unary `+` and `-` and decimal values are accepted for coordinates. Delays must
 be non-negative integers. Pin arguments may be declared integer identifiers or
 integer literals.
+
+The language is the same in all three bundled examples. Free form mode adds an
+application-level coordinate envelope—X `-100..100`, Y `100..200`, and Z
+`0..150` millimeters—before the same kinematic and servo-limit checks. That
+mode-specific envelope does not change the parser grammar.
 
 `begin()` establishes the initial HOME position and opens the claw, matching
 the source library. Pin values are displayed for review but do not change the

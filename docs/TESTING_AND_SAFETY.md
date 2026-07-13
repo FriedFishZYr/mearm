@@ -29,11 +29,20 @@ concise reminder that physical verification is required.
 
 ## Test layers
 
+The current automated suite contains 46 tests across 9 files. It covers the
+deterministic core, application preview boundary, viewer transforms and
+playback sampling, syntax highlighting, classroom samples, and required
+interface contracts.
+
+The lists below describe the intended release coverage. Browser interaction,
+visual regression, and physical scenarios that are not automated are tracked
+as manual gates in `VALIDATION_REPORT.md`.
+
 ### Parser unit tests
 
 Cover:
 
-- both existing classroom sketches,
+- both classroom lesson sketches,
 - whitespace and trailing comments,
 - line and block comments containing fake commands,
 - signed and decimal coordinate literals,
@@ -43,7 +52,7 @@ Cover:
 - invalid and negative delays,
 - source line and column accuracy.
 
-Golden command lists for the instructor and student sketches should make
+Command-list assertions for the Instructor and Student sketches make
 unintended parser changes obvious.
 
 ### Kinematics unit tests
@@ -94,6 +103,11 @@ Load each shipped sample, build a timeline, play it, scrub it, change speed,
 and confirm diagnostics and current source lines. Test production output with
 network access disabled.
 
+The repository currently uses focused unit/integration tests and source-level
+interface contracts rather than a committed browser-automation suite. Recorded
+manual Chromium passes cover the core workflow; the current manual gaps are
+listed in `VALIDATION_REPORT.md`.
+
 ## Physical validation checklist
 
 Before a sketch is approved for student hardware:
@@ -120,3 +134,8 @@ Before a sketch is approved for student hardware:
   physically calibrated MeArm.
 - Known simulation limitations are visible in the application and release
   notes.
+
+Automated tests, the production build, and source-level accessibility contracts
+pass, and core Chromium behavior has recorded evidence. Cross-browser, offline,
+and assistive-technology manual gaps must still be closed, and physical
+comparison remains mandatory before version 1.0.

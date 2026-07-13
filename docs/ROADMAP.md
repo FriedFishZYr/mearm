@@ -1,69 +1,67 @@
 # Roadmap
 
-## Phase 0: documentation and technology decision - complete
+## Phase 0: scope and technology decision — complete
 
-- Agree on product scope, supported syntax, safety boundaries, and acceptance criteria.
-- Inspect locally available runtimes and build tools.
-- Compare maintained 3D, editor, build, and testing options.
-- Record the chosen stack, versions, licenses, and reasons.
-- Request permission before installing packages or runtimes.
+- Defined product scope, supported syntax, safety boundaries, and acceptance
+  criteria.
+- Selected TypeScript, Vite, Vitest, and Three.js.
+- Recorded the technology decision and deferred alternatives.
 
-Exit condition: documentation is internally consistent and the implementation stack is approved.
+## Phase 1: deterministic simulation core — complete
 
-## Phase 1: deterministic simulation core - complete
+- Added versioned profile defaults and validation.
+- Implemented the tokenizer/parser subset with source locations.
+- Implemented forward/inverse kinematics and limit diagnostics.
+- Built deterministic setup, movement, claw, and delay timelines.
+- Added classroom fixtures and automated core coverage.
 
-- Create the browser application scaffold.
-- Define versioned robot profiles and defaults.
-- Port inverse and forward kinematics from the MeArm source.
-- Implement reachability and servo-limit validation.
-- Implement the documented tokenizer and parser subset.
-- Build deterministic movement and claw timelines.
-- Add unit tests using both classroom sketches as fixtures.
+## Phase 2: 3D viewer — complete
 
-Exit condition: code text can produce a fully tested, renderer-independent timeline of valid poses, warnings, and source locations.
+- Built the simplified MeArm transform hierarchy.
+- Connected deterministic playback state to arm and claw transforms.
+- Added path rendering, coordinate labels, grid, axes, orbit/zoom, fit/reset,
+  and camera presets.
+- Added valid, caution, and invalid visual states.
 
-## Phase 2: lightweight 3D viewer - complete
+## Phase 3: classroom workspace — complete
 
-- Build the transform hierarchy from simple geometry.
-- Add camera orbit, zoom, reset, grid, and axes.
-- Connect playback state to arm and claw transforms.
-- Draw the optional target/path trail.
-- Add clear valid, caution, invalid, and unsupported states.
+- Added editable Instructor, Student, and Free form examples.
+- Added playback, stepping, scrubbing, speed, repeat, and source linking.
+- Added syntax highlighting, clickable gutter checkpoints, reset behavior, and
+  copyable pose/delay commands.
+- Added Free form coordinate bounds and instructor-editable simulation settings.
+- Added responsive layouts, labels, focus styles, and textual status cues.
 
-Exit condition: the approved poses and complete instructor dance render correctly and meet endpoint tolerances.
+## Phase 4: release validation — in progress
 
-## Phase 3: classroom interface - complete
+Completed:
 
-- Add code input and shipped samples.
-- Add play, pause, restart, step, speed, repeat, and scrub controls.
-- Link timeline commands and diagnostics to source lines.
-- Add instructor-editable simulation settings with reset.
-- Complete keyboard, contrast, responsive-layout, and reduced-motion checks.
+- static optimized production build;
+- strict TypeScript and automated test gates;
+- local runtime asset verification;
+- core desktop and phone-width Chromium interaction checks; and
+- responsive interface smoke checks at multiple viewport sizes.
 
-Exit condition: a beginner can paste a supported sketch and understand its motion or error without developer assistance.
+Remaining before 1.0:
 
-## Phase 4: build, offline, and validation - paused after software and browser checks
-
-- Produce a static optimized build with all runtime assets bundled.
-- Verify the build contains only local runtime assets.
-- Add end-to-end and focused visual regression coverage.
-- Compare timing and all approved poses with the source library.
-- Perform the physical validation checklist with a calibrated MeArm.
-- Document remaining differences and release the first classroom candidate.
-
-Current checkpoint: the static build and browser validation are complete.
-Physical validation is intentionally deferred until the MeArm is assembled.
-
-Exit condition: all first-release acceptance criteria and the definition of done are satisfied.
+- explicitly exercise the newest Free form, copy, reset, and command-marker
+  flows in a production browser;
+- complete recommended Chrome/Edge, keyboard-only, assistive-technology,
+  touch-gesture, reduced-motion, and offline manual checks;
+- assemble and calibrate the classroom MeArm;
+- run the physical validation protocol and record results; and
+- document any hardware/profile corrections and make the release decision.
 
 ## Deferred work
 
-- Arbitrary Arduino/C++ execution.
-- Full rigid-body physics.
-- Collision detection without measured geometry.
-- Direct code upload.
-- Web Serial telemetry.
-- Multi-arm scenes or multiple simultaneous arm instances.
-- Importing arbitrary CAD models.
+- Arbitrary Arduino/C++ execution
+- Full rigid-body physics
+- Collision detection without measured geometry
+- Direct Arduino upload
+- Web Serial telemetry
+- Multiple simultaneous arms
+- Arbitrary CAD import
+- Persisted or import/export simulation profiles
 
-Deferred items require a separate design decision and must not silently expand the first-release scope.
+Deferred items require a separate design decision and must not silently expand
+the first-release safety claims.
