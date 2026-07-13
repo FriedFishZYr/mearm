@@ -50,11 +50,14 @@ app.innerHTML = `
       <section class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-heading">
           <div><p class="eyebrow">Arduino sketch</p><h2 id="editor-title">Dance code</h2></div>
-          <span id="editor-state" class="editor-state">Ready</span>
+          <div class="editor-heading-actions">
+            <span id="editor-state" class="editor-state">Ready</span>
+            <button id="reset-code" class="reset-code-button" type="button">Reset code</button>
+          </div>
         </div>
         <div id="editor-message" class="editor-message success" role="status">Instructor dance is ready to preview.</div>
         <div class="editor-wrap">
-          <div class="gutter" aria-hidden="true"><div id="line-numbers"></div></div>
+          <div class="gutter"><div id="line-numbers" role="group" aria-label="Code command markers"></div></div>
           <div class="editor-surface">
             <pre id="code-highlight" class="code-highlight" aria-hidden="true"></pre>
             <textarea id="code-editor" aria-label="Arduino dance code" wrap="off" spellcheck="false"></textarea>
@@ -67,9 +70,9 @@ app.innerHTML = `
         <div id="scene" class="scene"></div>
         <div id="freeform-constraints" class="freeform-constraints" aria-label="Free form coordinate limits" hidden>
           <strong>Free-form limits</strong>
-          <span><b class="axis-x">X</b> −100 to +100</span>
-          <span><b class="axis-y">Y</b> 100 to 200</span>
-          <span><b class="axis-z">Z</b> 0 to 150 mm</span>
+          <span><b class="axis-x">X</b><span>−100 to +100 <small>mm</small></span></span>
+          <span><b class="axis-y">Y</b><span>100 to 200 <small>mm</small></span></span>
+          <span><b class="axis-z">Z</b><span>0 to 150 <small>mm</small></span></span>
         </div>
         <div class="viewport-toolbar" role="toolbar" aria-label="3D viewport tools">
           <div class="viewport-tool-group">
@@ -136,7 +139,7 @@ app.innerHTML = `
           <div class="transport-buttons">
             <button id="previous-command" class="square-button" type="button" aria-label="Previous command">Back</button>
             <button id="restart" class="square-button" type="button">Restart</button>
-            <button id="play" class="primary-button" type="button" aria-pressed="true">Pause</button>
+            <button id="play" class="primary-button" type="button" aria-pressed="false">Play</button>
             <button id="next-command" class="square-button" type="button" aria-label="Next command">Next</button>
           </div>
         </section>
@@ -144,7 +147,7 @@ app.innerHTML = `
           <h3 id="options-title" class="section-label">Playback settings</h3>
           <div class="play-options">
             <label>Speed <select id="speed" aria-label="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
-            <label><input id="repeat" type="checkbox" checked /> Repeat loop</label>
+            <label><input id="repeat" type="checkbox" /> Repeat loop</label>
           </div>
         </section>
         <section class="inspector-section timeline-section" aria-labelledby="timeline-title">
@@ -224,7 +227,7 @@ let viewer: MeArmScene;
 let currentTime = 0;
 let activeLine = 1;
 let speed = 1;
-let playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let playing = false;
 let previousTimestamp = performance.now();
 let dirty = false;
 let previewReady = false;
@@ -241,6 +244,10 @@ function loadSample(name: "instructor" | "student" | "freeform"): void {
   dirty = false;
   updateGutter();
   compileCurrent();
+}
+
+function resetCode(): void {
+  loadSample(activeMode);
 }
 
 function compileCurrent(profile = activeProfile): boolean {
@@ -268,6 +275,7 @@ function compileCurrent(profile = activeProfile): boolean {
   viewer.setPathVisible(get<HTMLInputElement>("toggle-path").checked);
   currentTime = 0;
   range.max = String(Math.max(1, activeTimeline.loopDurationMs));
+  renderCommandMarkers();
   get("duration").textContent = formatTime(activeTimeline.loopDurationMs);
   dirty = false;
   get("editor-state").textContent = "Preview current";
@@ -359,7 +367,7 @@ function showEditorMessage(kind: "success" | "warning" | "error", message: strin
 
 function updateGutter(): void {
   const count = editor.value.split("\n").length;
-  get("line-numbers").innerHTML = Array.from({ length: count }, (_, index) => `<span data-line="${index + 1}">${index + 1}</span>`).join("");
+  get("line-numbers").innerHTML = Array.from({ length: count }, (_, index) => `<div class="line-number" data-line="${index + 1}"><span aria-hidden="true">${index + 1}</span></div>`).join("");
   get("code-count").textContent = `${count} line${count === 1 ? "" : "s"}`;
   highlightOutput.innerHTML = highlightArduino(editor.value);
   syncEditorScroll();
@@ -395,6 +403,41 @@ function setPlaybackEnabled(enabled: boolean): void {
   }
 }
 function formatTime(milliseconds: number): string { const seconds = milliseconds / 1000; return `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, "0")}`; }
+
+function renderCommandMarkers(): void {
+  const commandIndicesByLine = new Map<number, number[]>();
+  activeTimeline.loop.forEach((segment, index) => {
+    const line = segment.command.location.line;
+    const indices = commandIndicesByLine.get(line) ?? [];
+    indices.push(index);
+    commandIndicesByLine.set(line, indices);
+  });
+
+  for (const [line, indices] of commandIndicesByLine) {
+    const lineNumber = get("line-numbers").querySelector<HTMLElement>(`[data-line="${line}"]`);
+    const firstIndex = indices[0];
+    if (!lineNumber || firstIndex === undefined) continue;
+    const command = activeTimeline.loop[firstIndex]!.command;
+    const button = document.createElement("button");
+    button.className = "command-marker";
+    button.type = "button";
+    button.dataset.commandIndex = String(firstIndex);
+    button.setAttribute("aria-label", indices.length === 1
+      ? `Go to command ${firstIndex + 1}, line ${line}: ${commandText(command)}`
+      : `Go to the first of ${indices.length} commands on line ${line}: ${commandText(command)}`);
+    button.title = indices.length === 1 ? `Go to command ${firstIndex + 1}` : `Go to first command on line ${line}`;
+    lineNumber.prepend(button);
+  }
+}
+
+function visitCommand(index: number): void {
+  const segment = activeTimeline.loop[index];
+  if (!segment) return;
+  currentTime = segment.startMs;
+  playing = false;
+  syncPlayButton();
+  updateFrame();
+}
 
 async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
   const command = button.dataset.command;
@@ -459,12 +502,18 @@ sampleSelect.addEventListener("change", () => {
   if (sampleSelect.value === "instructor" || sampleSelect.value === "student" || sampleSelect.value === "freeform") loadSample(sampleSelect.value);
 });
 get("preview").addEventListener("click", () => compileCurrent());
+get("reset-code").addEventListener("click", resetCode);
 playButton.addEventListener("click", () => { if (dirty && !compileCurrent()) return; playing = !playing; syncPlayButton(); });
 get("restart").addEventListener("click", () => { currentTime = 0; updateFrame(); });
 get("previous-command").addEventListener("click", () => stepCommand(-1));
 get("next-command").addEventListener("click", () => stepCommand(1));
 get<HTMLSelectElement>("speed").addEventListener("change", (event) => { speed = Number((event.currentTarget as HTMLSelectElement).value); });
 range.addEventListener("input", () => { currentTime = Number(range.value); playing = false; syncPlayButton(); updateFrame(); });
+get("line-numbers").addEventListener("click", (event) => {
+  const marker = (event.target as HTMLElement).closest<HTMLButtonElement>(".command-marker");
+  if (!marker) return;
+  visitCommand(Number(marker.dataset.commandIndex));
+});
 get("source-line").addEventListener("click", () => revealLine(activeLine));
 get("fit-camera").addEventListener("click", () => viewer.fitToView());
 get("reset-camera").addEventListener("click", () => viewer.resetCamera());
