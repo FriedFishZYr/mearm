@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseSketch } from "../src/core/parser";
 import { DEFAULT_PROFILE } from "../src/core/profile";
 import { buildTimeline } from "../src/core/timeline";
-import { collectPath, sampleSegments } from "../src/viewer/playback";
+import { collectPath, collectTravelPoints, sampleSegments } from "../src/viewer/playback";
 
 const makeTimeline = (body: string) => buildTimeline(parseSketch(`
   MeArm arm;
@@ -38,5 +38,16 @@ describe("viewer playback sampling", () => {
     expect(points[0]).toEqual(DEFAULT_PROFILE.home);
     expect(points.at(-1)).toEqual({ x: 50, y: 100, z: 80 });
     expect(points.length).toBeGreaterThan(10);
+  });
+
+  it("collects unique traveled destinations for coordinate labels", () => {
+    const timeline = makeTimeline("arm.moveToXYZ(-50, 100, 80); arm.moveToXYZ(50, 100, 80); arm.moveToXYZ(-50, 100, 80);");
+    const points = collectTravelPoints(timeline.loop);
+
+    expect(points).toEqual([
+      DEFAULT_PROFILE.home,
+      { x: -50, y: 100, z: 80 },
+      { x: 50, y: 100, z: 80 },
+    ]);
   });
 });

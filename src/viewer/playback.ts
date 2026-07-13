@@ -88,3 +88,19 @@ export function collectPath(segments: TimelineSegment[]): Point3[] {
   }
   return points;
 }
+
+export function collectTravelPoints(segments: TimelineSegment[]): Point3[] {
+  if (segments.length === 0) return [];
+  const points: Point3[] = [];
+  const seen = new Set<string>();
+  const add = (point: Point3): void => {
+    const key = `${point.x}:${point.y}:${point.z}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    points.push({ ...point });
+  };
+
+  add(segments[0]!.startState.position);
+  for (const segment of segments) add(segment.endState.position);
+  return points;
+}

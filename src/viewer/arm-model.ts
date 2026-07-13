@@ -4,9 +4,9 @@ import type { JointAngles, Point3, RobotProfile } from "../core/types";
 export type ViewerStatus = "valid" | "caution" | "invalid";
 
 const COLORS = {
-  frame: 0xcbd8d2,
-  frameDark: 0x607870,
-  joint: 0x2f806d,
+  frame: 0xd4d9dc,
+  frameDark: 0x66727a,
+  joint: 0x4f5b63,
   claw: 0xffb454,
   valid: 0x2f806d,
   caution: 0xffc857,

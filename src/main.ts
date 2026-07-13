@@ -1,11 +1,12 @@
 import "./styles.css";
 import instructorSketch from "./samples/MeArm_Dance_Instructor.ino?raw";
 import studentSketch from "./samples/MeArm_Dance_Student.ino?raw";
+import { highlightArduino } from "./app/highlight";
 import { compilePreview, createProfile, defaultProfileValues, lineRange, profileToValues, type ProfileValues } from "./app/preview";
 import { DEFAULT_PROFILE, validateProfile } from "./core/profile";
 import type { Command, JointAngles, Point3, RobotProfile, Timeline } from "./core/types";
-import { collectPath, sampleSegments } from "./viewer/playback";
-import { MeArmScene } from "./viewer/scene";
+import { collectPath, collectTravelPoints, sampleSegments } from "./viewer/playback";
+import { MeArmScene, type CameraPreset } from "./viewer/scene";
 
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) throw new Error("Application root was not found.");
@@ -14,7 +15,7 @@ app.innerHTML = `
   <div class="app-shell">
     <header class="topbar">
       <div class="brand"><div class="brand-mark" aria-hidden="true">M</div><div><p>MeArm Robotics</p><h1>Classroom Motion Lab</h1></div></div>
-      <div class="project-actions">
+      <div class="project-actions" role="group" aria-label="Project controls">
         <label class="sample-control">Example
           <select id="sample-select" aria-label="Example sketch">
             <option value="instructor">Instructor dance</option>
@@ -22,7 +23,7 @@ app.innerHTML = `
             <option value="custom" disabled>Edited sketch</option>
           </select>
         </label>
-        <button id="settings-open" class="top-button" type="button">Robot settings</button>
+        <button id="settings-open" class="top-button secondary-button" type="button">Robot settings</button>
         <button id="preview" class="preview-button" type="button">Preview code</button>
       </div>
     </header>
@@ -36,20 +37,48 @@ app.innerHTML = `
         <div id="editor-message" class="editor-message success" role="status">Instructor dance is ready to preview.</div>
         <div class="editor-wrap">
           <div class="gutter" aria-hidden="true"><div id="line-numbers"></div></div>
-          <textarea id="code-editor" aria-label="Arduino dance code" wrap="off" spellcheck="false"></textarea>
+          <div class="editor-surface">
+            <pre id="code-highlight" class="code-highlight" aria-hidden="true"></pre>
+            <textarea id="code-editor" aria-label="Arduino dance code" wrap="off" spellcheck="false"></textarea>
+          </div>
         </div>
         <div class="editor-footer"><span>Ctrl + Enter to preview</span><span id="code-count">0 lines</span></div>
       </section>
 
       <section class="stage" aria-label="Interactive 3D MeArm viewer">
         <div id="scene" class="scene"></div>
-        <div class="scene-overlay scene-label"><span>3D kinematic preview</span><strong id="pose-name">HOME</strong></div>
-        <div class="scene-overlay camera-help">Drag to orbit · Scroll to zoom</div>
-        <div class="view-actions" aria-label="Viewer options">
-          <button id="reset-camera" type="button">Reset view</button>
-          <label><input id="toggle-path" type="checkbox" checked /> Path</label>
-          <label><input id="toggle-grid" type="checkbox" checked /> Grid</label>
-          <label><input id="toggle-axes" type="checkbox" /> Axes</label>
+        <div class="viewport-toolbar" role="toolbar" aria-label="3D viewport tools">
+          <div class="viewport-tool-group">
+            <button id="fit-camera" class="viewport-tool" type="button" aria-label="Fit robot to view" title="Fit robot and path to view">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4M10 2h4v4M14 10v4h-4M6 14H2v-4" /></svg><span>Fit</span>
+            </button>
+            <button id="reset-camera" class="viewport-tool" type="button" aria-label="Reset view" title="Reset camera to the default view">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6A5.2 5.2 0 1 1 3 10.3M3.2 6V2.7M3.2 6h3.3" /></svg><span>Reset</span>
+            </button>
+            <label class="camera-preset-control" title="Choose a camera preset">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m8 2 5 2.7v6.6L8 14l-5-2.7V4.7L8 2Zm0 0v5.8m5-3.1L8 7.8 3 4.7m5 3.1V14" /></svg>
+              <select id="camera-preset" aria-label="Camera preset">
+                <option value="isometric" selected>Isometric</option>
+                <option value="front">Front</option>
+                <option value="back">Back</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="top">Top</option>
+                <option value="custom" disabled>Custom</option>
+              </select>
+            </label>
+          </div>
+          <span class="viewport-toolbar-divider" aria-hidden="true"></span>
+          <div class="viewport-tool-group viewport-visibility-tools">
+            <label class="viewport-toggle" title="Show or hide the motion path"><input id="toggle-path" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 12.5c2.5-5 4.5-1.2 6.3-5.2 1-2.2 2.4-2.8 4.7-3.8" /><circle cx="2.5" cy="12.5" r="1" /><circle cx="13.5" cy="3.5" r="1" /></svg><span>Path</span></label>
+            <label class="viewport-toggle" title="Show or hide the floor grid"><input id="toggle-grid" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h11v11h-11zM2.5 8h11M8 2.5v11" /></svg><span>Grid</span></label>
+            <label class="viewport-toggle" title="Show or hide the scene axes"><input id="toggle-axes" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12V4m0 8h8M4 12l5-5" /></svg><span>Axes</span></label>
+          </div>
+        </div>
+        <div class="viewport-statusbar">
+          <div class="viewport-camera-state"><strong id="camera-view">Isometric view</strong><span>Robot pose <span id="pose-name">HOME</span></span></div>
+          <div class="viewport-guidance">Drag to orbit · Scroll to zoom</div>
+          <div class="axis-key" aria-label="Axis colors: X red, Y green, Z blue" title="Axis colors: X red, Y green, Z blue"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div>
         </div>
       </section>
 
@@ -87,7 +116,7 @@ app.innerHTML = `
 
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
     <form id="settings-form" method="dialog">
-      <div class="settings-head"><div><p class="eyebrow">Instructor controls</p><h2 id="settings-title">Robot settings</h2></div><button id="settings-close" class="close-button" type="button" aria-label="Close settings">Close</button></div>
+      <div class="settings-head"><div><p class="eyebrow">Instructor controls</p><h2 id="settings-title">Robot settings</h2></div><button id="settings-close" class="close-button secondary-button" type="button" aria-label="Close settings">Close</button></div>
       <p class="settings-intro">These values change only the preview. They do not calibrate the physical robot.</p>
       <div id="settings-error" class="settings-error" role="alert" hidden></div>
       <fieldset><legend>Arm geometry <small>millimeters</small></legend><div class="field-grid three">
@@ -114,11 +143,14 @@ const get = <T extends HTMLElement>(id: string): T => {
 };
 
 const editor = get<HTMLTextAreaElement>("code-editor");
+const highlightOutput = get<HTMLElement>("code-highlight");
 const sampleSelect = get<HTMLSelectElement>("sample-select");
 const sceneContainer = get<HTMLElement>("scene");
 const range = get<HTMLInputElement>("timeline");
 const playButton = get<HTMLButtonElement>("play");
 const repeatInput = get<HTMLInputElement>("repeat");
+const cameraViewLabel = get<HTMLElement>("camera-view");
+const cameraPresetSelect = get<HTMLSelectElement>("camera-preset");
 const settingsDialog = get<HTMLDialogElement>("settings-dialog");
 const settingsForm = get<HTMLFormElement>("settings-form");
 
@@ -162,6 +194,7 @@ function compileCurrent(profile = activeProfile): boolean {
   viewer?.dispose();
   viewer = new MeArmScene(sceneContainer, profile);
   viewer.setPath(collectPath(activeTimeline.loop));
+  viewer.setCoordinateLabels(collectTravelPoints(activeTimeline.loop));
   viewer.setAxesVisible(get<HTMLInputElement>("toggle-axes").checked);
   viewer.setGridVisible(get<HTMLInputElement>("toggle-grid").checked);
   viewer.setPathVisible(get<HTMLInputElement>("toggle-path").checked);
@@ -207,7 +240,18 @@ function animationFrame(timestamp: number): void {
     } else currentTime = next;
   }
   if (previewReady) updateFrame();
-  viewer?.render();
+  if (viewer) {
+    viewer.render();
+    const cameraLabel = viewer.getCameraViewLabel();
+    cameraViewLabel.textContent = cameraLabel;
+    if (document.activeElement !== cameraPresetSelect) {
+      const presetByLabel: Record<string, string> = {
+        "Isometric view": "isometric", "Front view": "front", "Back view": "back",
+        "Left view": "left", "Right view": "right", "Top view": "top",
+      };
+      cameraPresetSelect.value = presetByLabel[cameraLabel] ?? "custom";
+    }
+  }
   requestAnimationFrame(animationFrame);
 }
 
@@ -249,6 +293,8 @@ function updateGutter(): void {
   const count = editor.value.split("\n").length;
   get("line-numbers").innerHTML = Array.from({ length: count }, (_, index) => `<span data-line="${index + 1}">${index + 1}</span>`).join("");
   get("code-count").textContent = `${count} line${count === 1 ? "" : "s"}`;
+  highlightOutput.innerHTML = highlightArduino(editor.value);
+  syncEditorScroll();
   setActiveLine(activeLine, true);
 }
 
@@ -265,11 +311,15 @@ function revealLine(line: number): void {
   editor.setSelectionRange(selected.start, selected.end);
   const lineHeight = 20;
   editor.scrollTop = Math.max(0, (line - 4) * lineHeight);
-  syncGutterScroll();
+  syncEditorScroll();
   setActiveLine(line, true);
 }
 
-function syncGutterScroll(): void { get("line-numbers").style.transform = `translateY(${-editor.scrollTop}px)`; }
+function syncEditorScroll(): void {
+  get("line-numbers").style.transform = `translateY(${-editor.scrollTop}px)`;
+  highlightOutput.scrollTop = editor.scrollTop;
+  highlightOutput.scrollLeft = editor.scrollLeft;
+}
 function syncPlayButton(): void { playButton.textContent = playing ? "Pause" : "Play"; playButton.setAttribute("aria-pressed", String(playing)); }
 function setPlaybackEnabled(enabled: boolean): void {
   for (const id of ["play", "restart", "previous-command", "next-command", "timeline"]) {
@@ -298,7 +348,7 @@ function writeSettings(values: ProfileValues): void { for (const key of Object.k
 function readSettings(): ProfileValues { const result = {} as ProfileValues; for (const key of Object.keys(settingIds) as (keyof ProfileValues)[]) result[key] = Number(get<HTMLInputElement>(settingIds[key]).value); return result; }
 
 editor.addEventListener("input", () => { dirty = true; get("editor-state").textContent = "Changes not previewed"; sampleSelect.value = "custom"; updateGutter(); });
-editor.addEventListener("scroll", syncGutterScroll);
+editor.addEventListener("scroll", syncEditorScroll);
 editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); compileCurrent(); } });
 sampleSelect.addEventListener("change", () => { if (sampleSelect.value === "instructor" || sampleSelect.value === "student") loadSample(sampleSelect.value); });
 get("preview").addEventListener("click", () => compileCurrent());
@@ -309,7 +359,11 @@ get("next-command").addEventListener("click", () => stepCommand(1));
 get<HTMLSelectElement>("speed").addEventListener("change", (event) => { speed = Number((event.currentTarget as HTMLSelectElement).value); });
 range.addEventListener("input", () => { currentTime = Number(range.value); playing = false; syncPlayButton(); updateFrame(); });
 get("source-line").addEventListener("click", () => revealLine(activeLine));
+get("fit-camera").addEventListener("click", () => viewer.fitToView());
 get("reset-camera").addEventListener("click", () => viewer.resetCamera());
+cameraPresetSelect.addEventListener("change", () => {
+  if (cameraPresetSelect.value !== "custom") viewer.setCameraPreset(cameraPresetSelect.value as CameraPreset);
+});
 get<HTMLInputElement>("toggle-path").addEventListener("change", (event) => viewer.setPathVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-grid").addEventListener("change", (event) => viewer.setGridVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-axes").addEventListener("change", (event) => viewer.setAxesVisible((event.currentTarget as HTMLInputElement).checked));
