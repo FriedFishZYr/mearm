@@ -83,33 +83,58 @@ app.innerHTML = `
       </section>
 
       <aside class="inspector" aria-label="Motion inspector">
-        <div class="inspector-head"><div><p class="eyebrow">Now running</p><h2 id="dance-title">Instructor dance</h2></div><span id="status" class="status valid" role="status" aria-live="polite"><span aria-hidden="true"></span>Valid</span></div>
-        <section class="readout" aria-labelledby="command-title">
-          <p id="command-title" class="section-label">Current command</p>
+        <header class="inspector-head"><div><p class="eyebrow">Now running</p><h2 id="dance-title">Instructor dance</h2></div><span id="status" class="status valid" role="status" aria-live="polite"><span aria-hidden="true"></span>Valid</span></header>
+        <section class="inspector-section command-section readout" aria-labelledby="command-title">
+          <div class="section-heading-row">
+            <h3 id="command-title" class="section-label">Current command</h3>
+            <button id="source-line" class="source-link" type="button">Line 1</button>
+          </div>
           <code id="command">arm.moveToXYZ(0, 100, 50);</code>
-          <button id="source-line" class="source-link" type="button">Line 1</button>
         </section>
-        <section class="metrics" aria-label="Robot position and angles">
-          <div class="metric-wide"><p class="section-label">Claw position</p><div class="coordinate-row">
-            <span><small>X</small><strong id="x-value">0.0</strong><em>mm</em></span><span><small>Y</small><strong id="y-value">100.0</strong><em>mm</em></span><span><small>Z</small><strong id="z-value">50.0</strong><em>mm</em></span>
-          </div></div>
-          <div><p class="section-label">Base</p><strong id="base-angle">0.0°</strong></div><div><p class="section-label">Shoulder</p><strong id="shoulder-angle">0.0°</strong></div><div><p class="section-label">Elbow</p><strong id="elbow-angle">0.0°</strong></div>
+        <section class="inspector-section position-section" aria-labelledby="position-title">
+          <h3 id="position-title" class="section-label">Claw position</h3>
+          <dl class="engineering-values" aria-label="Claw coordinates">
+            <div><dt class="axis-x">X</dt><dd><strong id="x-value">0.0</strong><span class="value-unit">mm</span></dd></div>
+            <div><dt class="axis-y">Y</dt><dd><strong id="y-value">100.0</strong><span class="value-unit">mm</span></dd></div>
+            <div><dt class="axis-z">Z</dt><dd><strong id="z-value">50.0</strong><span class="value-unit">mm</span></dd></div>
+          </dl>
         </section>
-        <section class="transport" aria-label="Playback controls">
+        <section class="inspector-section joints-section" aria-labelledby="joints-title">
+          <h3 id="joints-title" class="section-label">Joint angles</h3>
+          <dl class="engineering-values" aria-label="Joint angles">
+            <div><dt>Base</dt><dd><strong id="base-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+            <div><dt>Shoulder</dt><dd><strong id="shoulder-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+            <div><dt>Elbow</dt><dd><strong id="elbow-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+          </dl>
+        </section>
+        <section class="inspector-section transport playback-section" aria-labelledby="playback-title">
+          <h3 id="playback-title" class="section-label">Playback controls</h3>
           <div class="transport-buttons">
             <button id="previous-command" class="square-button" type="button" aria-label="Previous command">Back</button>
             <button id="restart" class="square-button" type="button">Restart</button>
             <button id="play" class="primary-button" type="button" aria-pressed="true">Pause</button>
             <button id="next-command" class="square-button" type="button" aria-label="Next command">Next</button>
           </div>
+        </section>
+        <section class="inspector-section options-section" aria-labelledby="options-title">
+          <h3 id="options-title" class="section-label">Playback settings</h3>
           <div class="play-options">
             <label>Speed <select id="speed" aria-label="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
             <label><input id="repeat" type="checkbox" checked /> Repeat loop</label>
           </div>
-          <input id="timeline" class="timeline" type="range" min="0" step="1" value="0" aria-label="Dance timeline" />
-          <div class="time-row"><span id="current-time">0:00.0</span><span id="duration">0:00.0</span></div>
         </section>
-        <p class="safety-note"><strong>Preview only.</strong> Confirm calibration, power, clearance, and each pose on the physical arm.</p>
+        <section class="inspector-section timeline-section" aria-labelledby="timeline-title">
+          <h3 id="timeline-title" class="section-label">Execution timeline</h3>
+          <input id="timeline" class="timeline" type="range" min="0" step="1" value="0" aria-label="Dance timeline" />
+          <div class="time-row">
+            <span><small>Elapsed</small><strong id="current-time">0:00.0</strong></span>
+            <span><small>Total</small><strong id="duration">0:00.0</strong></span>
+          </div>
+        </section>
+        <section class="inspector-section safety-section" aria-labelledby="safety-title">
+          <h3 id="safety-title" class="section-label">Physical-robot safety</h3>
+          <p class="safety-note"><strong>Preview only.</strong> Confirm calibration, power, clearance, and each pose on the physical arm.</p>
+        </section>
       </aside>
     </main>
   </div>
@@ -268,7 +293,7 @@ function commandText(command: Command): string {
 
 function updateReadout(point: Point3, angles: JointAngles): void {
   get("x-value").textContent = point.x.toFixed(1); get("y-value").textContent = point.y.toFixed(1); get("z-value").textContent = point.z.toFixed(1);
-  const angle = (value: number) => `${(value * 180 / Math.PI).toFixed(1)}°`;
+  const angle = (value: number) => (value * 180 / Math.PI).toFixed(1);
   get("base-angle").textContent = angle(angles.base); get("shoulder-angle").textContent = angle(angles.shoulder); get("elbow-angle").textContent = angle(angles.elbow);
   const pose = activeProfile.approvedPoses.find((item) => Math.hypot(item.x - point.x, item.y - point.y, item.z - point.z) < 0.7);
   get("pose-name").textContent = pose?.name ?? "IN MOTION";
