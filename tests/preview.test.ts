@@ -5,6 +5,7 @@ import {
   compilePreview,
   createProfile,
   defaultProfileValues,
+  FREE_FORM_BOUNDS,
   lineRange,
   profileToValues,
 } from "../src/app/preview";
@@ -41,5 +42,15 @@ describe("classroom preview compilation", () => {
     const source = "first\nsecond line\nthird";
     const range = lineRange(source, 2);
     expect(source.slice(range.start, range.end)).toBe("second line");
+  });
+
+  it("enforces inclusive free-form coordinate limits", () => {
+    const source = instructorSketch.replace("arm.moveToXYZ(0, 100, 50);", "arm.moveToXYZ(-100, 200, 150);");
+    expect(compilePreview(source, DEFAULT_PROFILE, FREE_FORM_BOUNDS).ok).toBe(true);
+
+    const outside = source.replace("arm.moveToXYZ(-100, 200, 150);", "arm.moveToXYZ(-101, 200, 150);");
+    const result = compilePreview(outside, DEFAULT_PROFILE, FREE_FORM_BOUNDS);
+    expect(result).toMatchObject({ ok: false, code: "COORDINATE_OUT_OF_BOUNDS" });
+    if (!result.ok) expect(result.message).toContain("X must be between -100 and 100 mm");
   });
 });

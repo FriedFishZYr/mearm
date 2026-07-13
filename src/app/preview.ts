@@ -1,7 +1,7 @@
 import { SketchParseError, parseSketch } from "../core/parser";
 import { DEFAULT_PROFILE, validateProfile } from "../core/profile";
 import { buildTimeline } from "../core/timeline";
-import type { ParsedSketch, RobotProfile, Timeline } from "../core/types";
+import type { ParsedSketch, Point3, RobotProfile, Timeline } from "../core/types";
 
 export interface ProfileValues {
   l1: number;
@@ -21,6 +21,14 @@ export interface ProfileValues {
 export type PreviewResult =
   | { ok: true; sketch: ParsedSketch; timeline: Timeline; profile: RobotProfile }
   | { ok: false; code: string; message: string; line?: number; column?: number };
+
+export type CoordinateBounds = Record<keyof Point3, { min: number; max: number }>;
+
+export const FREE_FORM_BOUNDS: CoordinateBounds = Object.freeze({
+  x: { min: -100, max: 100 },
+  y: { min: 100, max: 200 },
+  z: { min: 0, max: 150 },
+});
 
 const radians = (degrees: number): number => degrees * Math.PI / 180;
 const degrees = (radiansValue: number): number => radiansValue * 180 / Math.PI;
@@ -63,13 +71,35 @@ export function createProfile(values: ProfileValues): RobotProfile {
   return profile;
 }
 
-export function compilePreview(source: string, profile: RobotProfile): PreviewResult {
+export function compilePreview(
+  source: string,
+  profile: RobotProfile,
+  coordinateBounds?: CoordinateBounds,
+): PreviewResult {
   const profileErrors = validateProfile(profile);
   if (profileErrors.length > 0) {
     return { ok: false, code: "INVALID_PROFILE", message: profileErrors.join(" ") };
   }
   try {
     const sketch = parseSketch(source);
+    if (coordinateBounds) {
+      for (const command of [...sketch.setup, ...sketch.loop]) {
+        if (command.type !== "move" && command.type !== "snap") continue;
+        for (const axis of ["x", "y", "z"] as const) {
+          const value = command.target[axis];
+          const bounds = coordinateBounds[axis];
+          if (value < bounds.min || value > bounds.max) {
+            return {
+              ok: false,
+              code: "COORDINATE_OUT_OF_BOUNDS",
+              message: `${axis.toUpperCase()} must be between ${bounds.min} and ${bounds.max} mm in Free form mode (received ${value}).`,
+              line: command.location.line,
+              column: command.location.column,
+            };
+          }
+        }
+      }
+    }
     const timeline = buildTimeline(sketch, profile);
     if (timeline.loop.length === 0) {
       return { ok: false, code: "EMPTY_LOOP", message: "Add at least one supported command inside loop()." };

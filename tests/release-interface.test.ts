@@ -16,13 +16,17 @@ describe("release interface contract", () => {
       'id="next-command"',
       'id="preset-copy-status"',
       'aria-label="Approved pose commands"',
+      'aria-label="Delay commands"',
+      '<option value="freeform">Free form</option>',
+      'aria-label="Free form coordinate limits"',
     ]) expect(interfaceSource).toContain(marker);
   });
 
   it("builds copyable preset commands from the approved robot poses", () => {
     expect(interfaceSource).toContain("DEFAULT_PROFILE.approvedPoses.map");
+    expect(interfaceSource).toContain("[250, 500, 1000, 2000].map");
     expect(interfaceSource).toContain('navigator.clipboard.writeText(command)');
-    expect(interfaceSource).toContain('button.addEventListener("click", () => void copyPresetCommand(button))');
+    expect(interfaceSource).toContain('document.querySelectorAll<HTMLButtonElement>(".copy-command")');
   });
 
   it("keeps error-state playback disabled and names the WebGL canvas", () => {

@@ -1,8 +1,9 @@
 import "./styles.css";
+import freeFormSketch from "./samples/MeArm_Free_Form.ino?raw";
 import instructorSketch from "./samples/MeArm_Dance_Instructor.ino?raw";
 import studentSketch from "./samples/MeArm_Dance_Student.ino?raw";
 import { highlightArduino } from "./app/highlight";
-import { compilePreview, createProfile, defaultProfileValues, lineRange, profileToValues, type ProfileValues } from "./app/preview";
+import { compilePreview, createProfile, defaultProfileValues, FREE_FORM_BOUNDS, lineRange, profileToValues, type ProfileValues } from "./app/preview";
 import { DEFAULT_PROFILE, validateProfile } from "./core/profile";
 import type { Command, JointAngles, Point3, RobotProfile, Timeline } from "./core/types";
 import { collectPath, collectTravelPoints, sampleSegments } from "./viewer/playback";
@@ -14,10 +15,16 @@ if (!app) throw new Error("Application root was not found.");
 const presetCommand = (pose: Point3): string => `arm.moveToXYZ(${pose.x}, ${pose.y}, ${pose.z});`;
 const presetCommandButtons = DEFAULT_PROFILE.approvedPoses.map((pose) => {
   const command = presetCommand(pose);
-  return `<button class="preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}">
+  return `<button class="copy-command preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}">
     <span class="preset-name">${pose.name}</span>
     <code>${command}</code>
     <span class="preset-copy-label" aria-hidden="true">Copy</span>
+  </button>`;
+}).join("");
+const delayCommandButtons = [250, 500, 1000, 2000].map((milliseconds) => {
+  const command = `delay(${milliseconds});`;
+  return `<button class="copy-command delay-command" type="button" data-command="${command}" data-preset-name="${milliseconds} ms delay" aria-label="Copy ${command}" title="Copy ${command}">
+    <strong>${milliseconds}</strong><small>ms</small>
   </button>`;
 }).join("");
 
@@ -30,6 +37,7 @@ app.innerHTML = `
           <select id="sample-select" aria-label="Example sketch">
             <option value="instructor">Instructor dance</option>
             <option value="student">Student starter</option>
+            <option value="freeform">Free form</option>
             <option value="custom" disabled>Edited sketch</option>
           </select>
         </label>
@@ -57,6 +65,12 @@ app.innerHTML = `
 
       <section class="stage" aria-label="Interactive 3D MeArm viewer">
         <div id="scene" class="scene"></div>
+        <div id="freeform-constraints" class="freeform-constraints" aria-label="Free form coordinate limits" hidden>
+          <strong>Free-form limits</strong>
+          <span><b class="axis-x">X</b> −100 to +100</span>
+          <span><b class="axis-y">Y</b> 100 to 200</span>
+          <span><b class="axis-z">Z</b> 0 to 150 mm</span>
+        </div>
         <div class="viewport-toolbar" role="toolbar" aria-label="3D viewport tools">
           <div class="viewport-tool-group">
             <button id="fit-camera" class="viewport-tool" type="button" aria-label="Fit robot to view" title="Fit robot and path to view">
@@ -149,6 +163,12 @@ app.innerHTML = `
           <div class="preset-list" aria-label="Approved pose commands">
             ${presetCommandButtons}
           </div>
+          <div class="delay-command-group">
+            <span class="delay-command-label">Delay</span>
+            <div class="delay-command-row" aria-label="Delay commands">
+              ${delayCommandButtons}
+            </div>
+          </div>
         </section>
         <section class="inspector-section safety-section" aria-labelledby="safety-title">
           <h3 id="safety-title" class="section-label">Physical-robot safety</h3>
@@ -210,18 +230,21 @@ let dirty = false;
 let previewReady = false;
 let lastStatus = "";
 let copyFeedbackTimer: number | undefined;
+let activeMode: "instructor" | "student" | "freeform" = "instructor";
 
-function loadSample(name: "instructor" | "student"): void {
-  editor.value = name === "student" ? studentSketch : instructorSketch;
+function loadSample(name: "instructor" | "student" | "freeform"): void {
+  activeMode = name;
+  editor.value = name === "student" ? studentSketch : name === "freeform" ? freeFormSketch : instructorSketch;
   sampleSelect.value = name;
-  get("dance-title").textContent = name === "student" ? "Student starter" : "Instructor dance";
+  get("dance-title").textContent = name === "student" ? "Student starter" : name === "freeform" ? "Free form" : "Instructor dance";
+  get("freeform-constraints").hidden = name !== "freeform";
   dirty = false;
   updateGutter();
   compileCurrent();
 }
 
 function compileCurrent(profile = activeProfile): boolean {
-  const result = compilePreview(editor.value, profile);
+  const result = compilePreview(editor.value, profile, activeMode === "freeform" ? FREE_FORM_BOUNDS : undefined);
   if (!result.ok) {
     previewReady = false;
     playing = false;
@@ -397,15 +420,15 @@ async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
   }
 
   window.clearTimeout(copyFeedbackTimer);
-  const previousButton = document.querySelector<HTMLButtonElement>(".preset-command.copied");
+  const previousButton = document.querySelector<HTMLButtonElement>(".copy-command.copied");
   previousButton?.classList.remove("copied");
   previousButton?.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copy");
   button.classList.add("copied");
-  button.querySelector<HTMLElement>(".preset-copy-label")!.textContent = "Copied";
+  button.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copied");
   get("preset-copy-status").textContent = `${presetName} copied`;
   copyFeedbackTimer = window.setTimeout(() => {
     button.classList.remove("copied");
-    button.querySelector<HTMLElement>(".preset-copy-label")!.textContent = "Copy";
+    button.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copy");
     get("preset-copy-status").textContent = "Click to copy";
   }, 1800);
 }
@@ -432,7 +455,9 @@ function readSettings(): ProfileValues { const result = {} as ProfileValues; for
 editor.addEventListener("input", () => { dirty = true; get("editor-state").textContent = "Changes not previewed"; sampleSelect.value = "custom"; updateGutter(); });
 editor.addEventListener("scroll", syncEditorScroll);
 editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); compileCurrent(); } });
-sampleSelect.addEventListener("change", () => { if (sampleSelect.value === "instructor" || sampleSelect.value === "student") loadSample(sampleSelect.value); });
+sampleSelect.addEventListener("change", () => {
+  if (sampleSelect.value === "instructor" || sampleSelect.value === "student" || sampleSelect.value === "freeform") loadSample(sampleSelect.value);
+});
 get("preview").addEventListener("click", () => compileCurrent());
 playButton.addEventListener("click", () => { if (dirty && !compileCurrent()) return; playing = !playing; syncPlayButton(); });
 get("restart").addEventListener("click", () => { currentTime = 0; updateFrame(); });
@@ -449,7 +474,7 @@ cameraPresetSelect.addEventListener("change", () => {
 get<HTMLInputElement>("toggle-path").addEventListener("change", (event) => viewer.setPathVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-grid").addEventListener("change", (event) => viewer.setGridVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-axes").addEventListener("change", (event) => viewer.setAxesVisible((event.currentTarget as HTMLInputElement).checked));
-for (const button of document.querySelectorAll<HTMLButtonElement>(".preset-command")) {
+for (const button of document.querySelectorAll<HTMLButtonElement>(".copy-command")) {
   button.addEventListener("click", () => void copyPresetCommand(button));
 }
 
