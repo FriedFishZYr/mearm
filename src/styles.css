@@ -160,6 +160,16 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .time-row > span:last-child { text-align: right; }
 .time-row small { color: var(--text-subtle); font-size: .58rem; line-height: 1.2; }
 .time-row strong { color: var(--text); font: 600 .66rem/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+.preset-copy-status { color: var(--text-subtle); font-size: .61rem; white-space: nowrap; }
+.preset-list { display: grid; gap: .3rem; margin-top: .48rem; }
+.preset-command { min-width: 0; min-height: 31px; display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; align-items: center; gap: .45rem; padding: .34rem .45rem; border-color: var(--border); border-radius: var(--radius-small); color: var(--text-muted); background: var(--surface-subtle); text-align: left; }
+.preset-command:hover { border-color: #a9cec3; background: var(--accent-soft); }
+.preset-command:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.preset-command.copied { color: var(--accent-strong); border-color: #8bbcaf; background: var(--accent-soft); }
+.preset-name { color: var(--accent-strong); font-size: .62rem; font-weight: 700; letter-spacing: .04em; }
+.preset-command code { min-width: 0; overflow: hidden; color: var(--text); font: 500 .64rem/1.2 var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.preset-copy-label { color: var(--text-subtle); font-size: .59rem; font-weight: 600; }
+.preset-command.copied .preset-copy-label { color: var(--accent-strong); }
 .safety-section { border-bottom: 0; }
 .safety-note { margin: .42rem 0 0; padding-left: .62rem; border-left: 2px solid var(--warning-border); color: var(--text-muted); font-size: .67rem; line-height: 1.45; }
 .safety-note strong { color: var(--warning); }
@@ -187,7 +197,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 @media (max-width: 1180px) {
   .workspace { height: auto; min-height: calc(100vh - var(--topbar-height)); grid-template-columns: clamp(300px, 34vw, 350px) minmax(420px, 1fr); grid-template-rows: minmax(680px, calc(100vh - var(--topbar-height))) auto; }
   .editor-panel, .stage { min-height: 0; height: auto; }
-  .inspector { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "head command position" "joints playback options" "timeline timeline timeline" "safety safety safety"; overflow: visible; border-top: 1px solid var(--border-strong); border-left: 0; }
+  .inspector { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "head command position" "joints playback options" "timeline timeline timeline" "presets presets safety"; overflow: visible; border-top: 1px solid var(--border-strong); border-left: 0; }
   .inspector-head { grid-area: head; }
   .command-section { grid-area: command; }
   .position-section { grid-area: position; }
@@ -195,7 +205,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   .playback-section { grid-area: playback; }
   .options-section { grid-area: options; }
   .timeline-section { grid-area: timeline; }
+  .presets-section { grid-area: presets; border-right: 1px solid var(--border); }
   .safety-section { grid-area: safety; }
+  .preset-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .inspector-head, .command-section, .joints-section, .playback-section { border-right: 1px solid var(--border); }
 }
 
@@ -208,6 +220,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   .stage { height: 62vh; min-height: 480px; }
   .inspector { display: block; overflow-y: visible; }
   .inspector-head, .command-section, .joints-section, .playback-section { border-right: 0; }
+  .presets-section { border-right: 0; }
+  .preset-list { grid-template-columns: 1fr; }
   .viewport-toolbar { right: .5rem; top: .5rem; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 1rem); }
   .viewport-tool, .camera-preset-control, .viewport-toggle { min-height: 34px; }
   .field-grid.three { grid-template-columns: 1fr; }
@@ -228,7 +242,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 }
 
 @media (pointer: coarse) {
-  .top-button, .preview-button, .secondary-button, .transport button { min-height: 44px; }
+  .top-button, .preview-button, .secondary-button, .transport button, .preset-command { min-height: 44px; }
   .viewport-tool, .camera-preset-control, .viewport-toggle { min-height: 40px; }
 }
 

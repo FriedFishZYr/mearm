@@ -11,6 +11,16 @@ import { MeArmScene, type CameraPreset } from "./viewer/scene";
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) throw new Error("Application root was not found.");
 
+const presetCommand = (pose: Point3): string => `arm.moveToXYZ(${pose.x}, ${pose.y}, ${pose.z});`;
+const presetCommandButtons = DEFAULT_PROFILE.approvedPoses.map((pose) => {
+  const command = presetCommand(pose);
+  return `<button class="preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}">
+    <span class="preset-name">${pose.name}</span>
+    <code>${command}</code>
+    <span class="preset-copy-label" aria-hidden="true">Copy</span>
+  </button>`;
+}).join("");
+
 app.innerHTML = `
   <div class="app-shell">
     <header class="topbar">
@@ -131,6 +141,15 @@ app.innerHTML = `
             <span><small>Total</small><strong id="duration">0:00.0</strong></span>
           </div>
         </section>
+        <section class="inspector-section presets-section" aria-labelledby="presets-title">
+          <div class="section-heading-row">
+            <h3 id="presets-title" class="section-label">Preset commands</h3>
+            <span id="preset-copy-status" class="preset-copy-status" role="status" aria-live="polite">Click to copy</span>
+          </div>
+          <div class="preset-list" aria-label="Approved pose commands">
+            ${presetCommandButtons}
+          </div>
+        </section>
         <section class="inspector-section safety-section" aria-labelledby="safety-title">
           <h3 id="safety-title" class="section-label">Physical-robot safety</h3>
           <p class="safety-note"><strong>Preview only.</strong> Confirm calibration, power, clearance, and each pose on the physical arm.</p>
@@ -190,6 +209,7 @@ let previousTimestamp = performance.now();
 let dirty = false;
 let previewReady = false;
 let lastStatus = "";
+let copyFeedbackTimer: number | undefined;
 
 function loadSample(name: "instructor" | "student"): void {
   editor.value = name === "student" ? studentSketch : instructorSketch;
@@ -353,6 +373,43 @@ function setPlaybackEnabled(enabled: boolean): void {
 }
 function formatTime(milliseconds: number): string { const seconds = milliseconds / 1000; return `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, "0")}`; }
 
+async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
+  const command = button.dataset.command;
+  const presetName = button.dataset.presetName;
+  if (!command || !presetName) return;
+
+  try {
+    await navigator.clipboard.writeText(command);
+  } catch {
+    const fallback = document.createElement("textarea");
+    fallback.value = command;
+    fallback.setAttribute("readonly", "");
+    fallback.style.position = "fixed";
+    fallback.style.opacity = "0";
+    document.body.append(fallback);
+    fallback.select();
+    const copied = document.execCommand("copy");
+    fallback.remove();
+    if (!copied) {
+      get("preset-copy-status").textContent = "Copy unavailable";
+      return;
+    }
+  }
+
+  window.clearTimeout(copyFeedbackTimer);
+  const previousButton = document.querySelector<HTMLButtonElement>(".preset-command.copied");
+  previousButton?.classList.remove("copied");
+  previousButton?.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copy");
+  button.classList.add("copied");
+  button.querySelector<HTMLElement>(".preset-copy-label")!.textContent = "Copied";
+  get("preset-copy-status").textContent = `${presetName} copied`;
+  copyFeedbackTimer = window.setTimeout(() => {
+    button.classList.remove("copied");
+    button.querySelector<HTMLElement>(".preset-copy-label")!.textContent = "Copy";
+    get("preset-copy-status").textContent = "Click to copy";
+  }, 1800);
+}
+
 function stepCommand(direction: -1 | 1): void {
   const frame = sampleSegments(activeTimeline.loop, currentTime);
   let index = frame.segmentIndex + direction;
@@ -392,6 +449,9 @@ cameraPresetSelect.addEventListener("change", () => {
 get<HTMLInputElement>("toggle-path").addEventListener("change", (event) => viewer.setPathVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-grid").addEventListener("change", (event) => viewer.setGridVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-axes").addEventListener("change", (event) => viewer.setAxesVisible((event.currentTarget as HTMLInputElement).checked));
+for (const button of document.querySelectorAll<HTMLButtonElement>(".preset-command")) {
+  button.addEventListener("click", () => void copyPresetCommand(button));
+}
 
 get("settings-open").addEventListener("click", () => { writeSettings(profileToValues(activeProfile)); get("settings-error").hidden = true; settingsDialog.showModal(); });
 get("settings-close").addEventListener("click", () => settingsDialog.close());
