@@ -4,6 +4,7 @@ import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRe
 import type { Point3, RobotProfile } from "../core/types";
 import { MeArmModel, type ViewerStatus } from "./arm-model";
 import type { PlaybackFrame } from "./playback";
+import { TaskSpaceBoundary } from "./task-space";
 
 export type CameraPreset = "isometric" | "front" | "back" | "left" | "right" | "top";
 
@@ -14,6 +15,7 @@ export class MeArmScene {
   private readonly labelRenderer = new CSS2DRenderer();
   private readonly controls: OrbitControls;
   private readonly model: MeArmModel;
+  private readonly taskSpace: TaskSpaceBoundary;
   private readonly grid = new THREE.GridHelper(420, 21, 0xa9b1b7, 0xd9dee1);
   private readonly axes = new THREE.AxesHelper(55);
   private readonly pathLabels = new THREE.Group();
@@ -30,7 +32,7 @@ export class MeArmScene {
     this.renderer.domElement.setAttribute("role", "img");
     this.renderer.domElement.setAttribute(
       "aria-label",
-      "Interactive three-dimensional preview of the MeArm robot dance",
+      "Interactive three-dimensional preview of the MeArm robot dance and reachable task space",
     );
     this.labelRenderer.domElement.className = "scene-label-layer";
     this.labelRenderer.domElement.setAttribute("aria-hidden", "true");
@@ -77,7 +79,8 @@ export class MeArmScene {
     this.scene.add(this.axes, this.pathLabels);
 
     this.model = new MeArmModel(profile);
-    this.scene.add(this.model);
+    this.taskSpace = new TaskSpaceBoundary(profile, this.model.baseHeight);
+    this.scene.add(this.taskSpace, this.model);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -116,6 +119,10 @@ export class MeArmScene {
     this.pathLabels.visible = visible;
   }
 
+  setTaskSpaceVisible(visible: boolean): void {
+    this.taskSpace.visible = visible;
+  }
+
   setStatus(status: ViewerStatus): void {
     this.model.setStatus(status);
   }
@@ -130,6 +137,10 @@ export class MeArmScene {
   fitToView(): void {
     this.model.updateWorldMatrix(true, true);
     const bounds = new THREE.Box3().setFromObject(this.model);
+    if (this.taskSpace.visible) {
+      this.taskSpace.updateWorldMatrix(true, true);
+      bounds.union(new THREE.Box3().setFromObject(this.taskSpace));
+    }
     if (bounds.isEmpty()) return;
 
     const sphere = bounds.getBoundingSphere(new THREE.Sphere());
@@ -192,6 +203,7 @@ export class MeArmScene {
       if (child instanceof CSS2DObject) child.element.remove();
     }
     this.axes.dispose();
+    this.taskSpace.dispose();
     this.model.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();

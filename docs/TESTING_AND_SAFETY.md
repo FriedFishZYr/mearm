@@ -29,10 +29,10 @@ concise reminder that physical verification is required.
 
 ## Test layers
 
-The current automated suite contains 46 tests across 9 files. It covers the
+The current automated suite contains 50 tests across 10 files. It covers the
 deterministic core, application preview boundary, viewer transforms and
-playback sampling, syntax highlighting, classroom samples, and required
-interface contracts.
+playback sampling, task-space boundary geometry, syntax highlighting,
+classroom samples, and required interface contracts.
 
 The lists below describe the intended release coverage. Browser interaction,
 visual regression, and physical scenarios that are not automated are tracked

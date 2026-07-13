@@ -101,6 +101,7 @@ app.innerHTML = `
           <span class="viewport-toolbar-divider" aria-hidden="true"></span>
           <div class="viewport-tool-group viewport-visibility-tools">
             <label class="viewport-toggle" title="Show or hide the motion path"><input id="toggle-path" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 12.5c2.5-5 4.5-1.2 6.3-5.2 1-2.2 2.4-2.8 4.7-3.8" /><circle cx="2.5" cy="12.5" r="1" /><circle cx="13.5" cy="3.5" r="1" /></svg><span>Path</span></label>
+            <label class="viewport-toggle" title="Show or hide the servo-limited reachable task space"><input id="toggle-task-space" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 11.8 5 4.2l5-1.7 3.5 4.2-2.2 6.8-6.8.1-2-1.8Z" /><path d="m5 4.2 2.8 3.1 5.7-.6M7.8 7.3l3.5 6.2M7.8 7.3l-3.3 6.3" /></svg><span>Task space</span></label>
             <label class="viewport-toggle" title="Show or hide the floor grid"><input id="toggle-grid" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h11v11h-11zM2.5 8h11M8 2.5v11" /></svg><span>Grid</span></label>
             <label class="viewport-toggle" title="Show or hide the scene axes"><input id="toggle-axes" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12V4m0 8h8M4 12l5-5" /></svg><span>Axes</span></label>
           </div>
@@ -282,6 +283,7 @@ function compileCurrent(profile = activeProfile): boolean {
   viewer.setAxesVisible(get<HTMLInputElement>("toggle-axes").checked);
   viewer.setGridVisible(get<HTMLInputElement>("toggle-grid").checked);
   viewer.setPathVisible(get<HTMLInputElement>("toggle-path").checked);
+  viewer.setTaskSpaceVisible(get<HTMLInputElement>("toggle-task-space").checked);
   currentTime = 0;
   range.max = String(Math.max(1, activeTimeline.loopDurationMs));
   renderCommandMarkers();
@@ -527,6 +529,7 @@ cameraPresetSelect.addEventListener("change", () => {
   if (cameraPresetSelect.value !== "custom") viewer.setCameraPreset(cameraPresetSelect.value as CameraPreset);
 });
 get<HTMLInputElement>("toggle-path").addEventListener("change", (event) => viewer.setPathVisible((event.currentTarget as HTMLInputElement).checked));
+get<HTMLInputElement>("toggle-task-space").addEventListener("change", (event) => viewer.setTaskSpaceVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-grid").addEventListener("change", (event) => viewer.setGridVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-axes").addEventListener("change", (event) => viewer.setAxesVisible((event.currentTarget as HTMLInputElement).checked));
 for (const button of document.querySelectorAll<HTMLButtonElement>(".copy-command")) {

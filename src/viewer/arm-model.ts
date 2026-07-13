@@ -8,6 +8,7 @@ const COLORS = {
   frameDark: 0x66727a,
   joint: 0x4f5b63,
   claw: 0xffb454,
+  path: 0x7568c5,
   valid: 0x2f806d,
   caution: 0xffc857,
   invalid: 0xff5f6d,
@@ -31,7 +32,7 @@ export class MeArmModel extends THREE.Group {
   private readonly leftFinger = new THREE.Group();
   private readonly rightFinger = new THREE.Group();
   private readonly target: THREE.Mesh;
-  private readonly pathMaterial = new THREE.LineBasicMaterial({ color: COLORS.valid, transparent: true, opacity: 0.72 });
+  private readonly pathMaterial = new THREE.LineBasicMaterial({ color: COLORS.path, transparent: true, opacity: 0.72 });
   private path: THREE.Line | null = null;
   private readonly frameMaterials: THREE.MeshStandardMaterial[] = [];
 
@@ -117,7 +118,6 @@ export class MeArmModel extends THREE.Group {
     const targetMaterial = this.target.material as THREE.MeshStandardMaterial;
     targetMaterial.color.setHex(color);
     targetMaterial.emissive.setHex(color);
-    this.pathMaterial.color.setHex(color);
     for (const material of this.frameMaterials) {
       material.emissive.setHex(status === "valid" ? 0x000000 : color);
       material.emissiveIntensity = status === "valid" ? 0 : 0.13;

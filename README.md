@@ -13,7 +13,7 @@ physical robot.
 ## Project status
 
 The repository is a version 0.9.0 release candidate. The current automated
-gate passes with 46 tests across 9 test files, strict TypeScript checking, a
+gate passes with 50 tests across 10 test files, strict TypeScript checking, a
 production build, and offline-asset verification. Core browser and responsive
 checks have also been completed.
 
@@ -36,8 +36,8 @@ see the [validation report](docs/VALIDATION_REPORT.md) for the exact boundary.
   motion inspector.
 - Copyable HOME, LEFT, RIGHT, HIGH, LOW, common delay, and open/close claw
   commands.
-- Orbit, zoom, fit, reset, camera presets, path, grid, axes, and coordinate
-  labels in the 3D view.
+- Orbit, zoom, fit, reset, camera presets, path, servo-limited task-space
+  boundary, grid, axes, and coordinate labels in the 3D view.
 - Instructor-editable link lengths, HOME coordinates, and servo-angle limits.
 - Static production output with no required account, backend, analytics, or
   external runtime assets.
@@ -139,6 +139,8 @@ docs/          product, architecture, operation, validation, and safety docs
 - [Classroom interface guide](docs/CLASSROOM_INTERFACE.md)
 - [Supported sketch language](docs/SKETCH_LANGUAGE.md)
 - [3D viewer model](docs/VIEWER_MODEL.md)
+- [Task-space calculation tutorial](docs/TASK_SPACE_CALCULATION.md)
+- [Task Space Lab guide](public/TASK_SPACE_LAB.md)
 - [Testing and safety](docs/TESTING_AND_SAFETY.md)
 - [Release validation report](docs/VALIDATION_REPORT.md)
 - [Physical validation protocol](docs/PHYSICAL_VALIDATION.md)

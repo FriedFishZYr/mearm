@@ -52,11 +52,17 @@ The stage provides:
 - **Fit** and **Reset** camera actions;
 - Isometric, Front, Back, Left, Right, and Top camera presets;
 - independent Path, Grid, and Axes visibility controls;
+- an independent **Task space** control for the servo-limited reachable volume;
 - X/Y/Z axis labels and a color key; and
 - coordinate labels for unique destinations in the current path.
 
 The 3D canvas is accompanied by the motion inspector, so command, position,
 joint angle, timing, and status information remains available as text.
+
+The task-space surface is hidden initially to preserve a clear arm view. When
+shown, **Fit** includes it in the camera framing. Applying instructor geometry
+or servo-limit settings rebuilds the surface from the new in-memory profile.
+It is a mathematical reach envelope, not a physical clearance or safety map.
 
 ## Playback and inspection
 

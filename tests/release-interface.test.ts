@@ -22,6 +22,7 @@ describe("release interface contract", () => {
       'aria-label="Claw commands"',
       '<option value="freeform">Free form</option>',
       'aria-label="Free form coordinate limits"',
+      'id="toggle-task-space"',
     ]) expect(interfaceSource).toContain(marker);
   });
 
@@ -44,5 +45,6 @@ describe("release interface contract", () => {
   it("keeps error-state playback disabled and names the WebGL canvas", () => {
     expect(interfaceSource).toContain("setPlaybackEnabled(false)");
     expect(sceneSource).toContain("Interactive three-dimensional preview of the MeArm robot dance");
+    expect(sceneSource).toContain("setTaskSpaceVisible(visible: boolean)");
   });
 });

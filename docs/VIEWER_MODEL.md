@@ -40,11 +40,35 @@ The model includes:
 - horizontal hand and two animated claw fingers,
 - glowing target marker,
 - optional target path,
+- optional servo-limited task-space boundary,
 - optional reference grid and coordinate axes, and
 - coordinate labels for unique destinations in the parsed path.
 
 The scene also provides orbit/zoom, fit/reset, and Isometric, Front, Back,
 Left, Right, and Top camera views.
+
+## Task-space boundary
+
+The optional **Task space** overlay maps the six faces of the active
+base/shoulder/elbow servo-limit domain through the same forward kinematics used
+by pose validation. The result is a translucent curved surface with a light
+parameter grid. It is hidden by default so existing playback remains visually
+unchanged, and it is rebuilt whenever instructor settings recreate the scene.
+
+For the default profile, the configuration-space interior contains no
+kinematic singularity, so these six mapped faces are the complete mathematical
+boundary of the reachable endpoint volume. The overlay represents geometry and
+configured angle limits only. It does not account for torque, collisions,
+backlash, wiring, the table, or other physical restrictions.
+
+If an instructor enters much wider limits that introduce an interior
+singularity or a folded/self-overlapping kinematic map, the overlay continues
+to show the mapped servo-limit surfaces; it does not attempt to reconstruct a
+new outer hull from those exceptional configurations.
+
+See [Calculating the MeArm task space](TASK_SPACE_CALCULATION.md) for the full
+forward-kinematic derivation, default numeric bounds, Jacobian check, worked
+example, and surface-meshing procedure.
 
 ## Playback
 

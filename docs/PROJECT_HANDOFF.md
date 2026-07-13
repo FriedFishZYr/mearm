@@ -35,10 +35,10 @@ npm run preview
 npm run check
 ```
 
-This runs 46 tests across 9 files, strict TypeScript checking, a production
+This runs 50 tests across 10 files, strict TypeScript checking, a production
 build, and offline verification. The build currently emits a non-blocking
 advisory because the minified Three.js-containing JavaScript chunk exceeds
-500 kB; its current gzip size is about 155 kB.
+500 kB; its current gzip size is about 156 kB.
 
 ## High-value manual browser checks
 
@@ -50,7 +50,7 @@ Run the production preview and confirm:
 4. gutter checkpoints and the inspector source link jump to the right command;
 5. Reset code restores the active sample;
 6. play, pause, restart, Back, Next, scrub, repeat, and every speed work;
-7. Fit, Reset, camera presets, Path, Grid, and Axes work;
+7. Fit, Reset, camera presets, Path, Task space, Grid, and Axes work;
 8. invalid code disables playback instead of leaving a stale preview active;
 9. settings validation and Reset defaults behave correctly; and
 10. keyboard focus, narrow layouts, and the console remain clean.

@@ -78,6 +78,8 @@ covered by Vitest.
   hierarchy and applies joint angles and status materials.
 - `scene.ts` owns the renderer, camera, OrbitControls, lights, grid, axes,
   coordinate labels, visibility controls, resizing, and resource disposal.
+- `task-space.ts` maps the six faces of the active servo-limit domain through
+  forward kinematics and owns the translucent boundary mesh and parameter grid.
 
 The model uses simple geometry to explain joint relationships; it is not a CAD
 or rigid-body physics model.

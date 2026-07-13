@@ -12,8 +12,9 @@ data flow.
 - Rebalanced the desktop workspace around the existing editor, viewport, and
   inspector columns, with the 3D canvas remaining the dominant region.
 - Replaced broadly green-tinted surfaces with white and cool neutral gray.
-- Limited the green brand color to primary actions, active controls, valid
-  states, selections, and current execution progress.
+- Uses engineering blue (`#1F6FEB`) for primary actions, active controls,
+  selections, focus indicators, and current execution progress. Green is
+  reserved for semantic valid and success states.
 - Reduced card treatments, corner radii, decorative spacing, and shadows in
   favor of flat panels and precise 1 px separators.
 - Preserved the existing medium-screen and small-screen stacking behavior.
@@ -86,7 +87,7 @@ data flow.
 
 ## Verification
 
-- All 46 automated tests across 9 test files pass after the follow-up feature
+- All 50 automated tests across 10 test files pass after the follow-up feature
   work described below.
 - Strict TypeScript checking passes.
 - The optimized Vite production build passes.
@@ -112,3 +113,20 @@ non-blocking performance notice and is unrelated to these UI refinements.
 
 These follow-up flows have automated coverage. They remain listed in
 `VALIDATION_REPORT.md` for an explicit final production-browser pass.
+
+## 2026-07-13: engineering blue colorway
+
+- Updated Preview code and Play/Pause to solid engineering blue (`#1F6FEB`),
+  with `#1A5FC9` for hover states.
+- Updated pressed viewport toolbar controls to a light blue (`#DDEBFD`) with
+  dark blue text (`#0C447C`).
+- Retained green for valid and success states, plus the existing warning,
+  danger, and axis colors.
+- Set the reachable task-space surface and grid to muted cyan (`#4FA8B3`) so
+  the visualization remains distinct from both engineering-blue controls and
+  semantic status colors.
+- Set the motion path to muted indigo (`#7568C5`) so it stays distinct from the
+  task-space volume, controls, axes, and semantic status colors.
+- Shifted the application chrome to the cool neutral `#F5F6F8` background.
+- Changed presentation colors only; layout, content, interaction, and simulation
+  behavior are unchanged.

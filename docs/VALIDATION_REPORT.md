@@ -11,7 +11,7 @@
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Unit, integration, and interface-contract tests | Pass | 46 tests across 9 files |
+| Unit, integration, and interface-contract tests | Pass | 50 tests across 10 files |
 | Bundled classroom sketches | Pass | Instructor and Student parsing plus Free form mode contracts |
 | Approved pose endpoint accuracy | Pass | All five poses solve; round trips stay within 0.5 mm |
 | Free form coordinate envelope | Pass | Inclusive limits and out-of-bounds rejection covered |
@@ -20,8 +20,8 @@
 | Offline runtime assets | Pass | Generated document/CSS references are local |
 | Required release CSS | Pass | Focus, responsive, and reduced-motion rules found |
 
-The 2026-07-13 production build generated approximately 605.22 kB of
-JavaScript (155.10 kB gzip) and 21.73 kB of CSS (5.11 kB gzip). Vite reports a
+The 2026-07-13 production build generated approximately 608.35 kB of
+JavaScript (156.01 kB gzip) and 22.10 kB of CSS (5.14 kB gzip). Vite reports a
 non-blocking advisory because the minified Three.js-containing JavaScript chunk
 exceeds 500 kB. This is a performance consideration, not a correctness failure.
 
@@ -63,6 +63,10 @@ browser at 1274 × 974 and 390 × 844. That pass covered:
 A later UI-refinement pass checked 1280 × 720, 1024 × 800, and 375 × 812,
 including Play/Pause and previous/next command smoke checks, with no reported
 horizontal overflow or console errors.
+
+A development-browser check on 2026-07-13 confirmed that the Task space overlay
+starts hidden, toggles on without console errors, participates in **Fit**, and
+remains enabled after the settings flow rebuilds the Three.js scene.
 
 ## Remaining manual browser gate
 

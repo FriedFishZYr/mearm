@@ -19,7 +19,8 @@ remains the release blocker for classroom-ready version 1.0.
 - Inverse/forward kinematics, approved-pose classification, reachability
   checks, and configured servo-angle limits.
 - A simplified Three.js MeArm with orbit/zoom, camera presets, fit/reset,
-  path, grid, axes, coordinate labels, and responsive resizing.
+  path, servo-limited task space, grid, axes, coordinate labels, and responsive
+  resizing.
 - An editable, syntax-highlighted source view with line-linked diagnostics,
   active execution highlighting, and clickable command checkpoints.
 - Play/pause, restart, previous/next command, scrub, speed, and optional repeat.
@@ -34,7 +35,7 @@ remains the release blocker for classroom-ready version 1.0.
 
 As of 2026-07-13:
 
-- 46 tests across 9 test files pass.
+- 50 tests across 10 test files pass.
 - Strict TypeScript checking passes.
 - The optimized Vite build passes with the known non-blocking chunk-size
   advisory for the Three.js bundle.

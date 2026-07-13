@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>MeArm Task Space Lab</title>
+  <style>
+    :root {
+      --background: #ffffff;
+      --surface: #ffffff;
+      --surface-soft: #ffffff;
+      --foreground: #111111;
+      --muted: rgba(0, 0, 0, .62);
+      --border: rgba(0, 0, 0, .18);
+      --border-strong: #111111;
+      --primary: #111111;
+      --primary-soft: #ffffff;
+      --primary-foreground: #ffffff;
+      --series-1: #2f806d;
+      --series-2: #3979a3;
+      --series-3: #b36b35;
+      --series-4: #8b62a7;
+      --grid: rgba(0, 0, 0, .1);
+      --shadow: none;
+      color-scheme: light;
+      font-family: Georgia, "Times New Roman", Times, serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; color: var(--foreground); background: var(--background); }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent); outline-offset: 2px; }
+
+    .page { width: min(1320px, 100%); margin: 0 auto; padding: 28px clamp(16px, 4vw, 56px) 32px; }
+    .topbar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; margin-bottom: 28px; }
+    .back-link { display: inline-flex; align-items: center; min-height: 36px; padding: 0; color: var(--foreground); background: transparent; text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+    .title-block { min-width: 0; }
+    .eyebrow { margin: 0 0 3px; color: var(--primary); font-size: .74rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.25rem); line-height: 1.1; font-weight: 700; }
+    .subtitle { margin: 7px 0 0; color: var(--muted); font-size: .92rem; }
+    .profile-badge { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+
+    .step-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .step-tab { min-height: 50px; padding: 7px 12px 10px; border: 0; border-bottom: 2px solid transparent; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+    .step-tab span { display: block; color: inherit; font-size: .69rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .step-tab strong { display: block; margin-top: 2px; color: var(--foreground); font-size: .86rem; font-weight: 650; }
+    .step-tab[aria-selected="true"] { border-bottom-color: var(--foreground); color: var(--foreground); background: transparent; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, .8fr); min-height: 650px; overflow: hidden; border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); background: var(--surface); box-shadow: none; }
+    .visual-column { display: grid; grid-template-rows: auto minmax(360px, 1fr) auto; min-width: 0; border-right: 1px solid var(--border); }
+    .visual-heading { display: flex; justify-content: space-between; gap: 20px; padding: 17px 20px 14px; border-bottom: 1px solid var(--border); }
+    .visual-heading h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+    .visual-heading p { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
+    .step-count { align-self: start; color: var(--muted); font-size: .74rem; white-space: nowrap; }
+    .canvas-wrap { position: relative; min-height: 390px; background: var(--surface); }
+    canvas { display: block; width: 100%; height: 100%; min-height: 390px; cursor: grab; touch-action: none; }
+    canvas.dragging { cursor: grabbing; }
+    .drag-hint { position: absolute; right: 14px; bottom: 12px; padding: 0; color: var(--muted); background: transparent; font-size: .7rem; pointer-events: none; }
+
+    .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 15px 20px 18px; border-top: 1px solid var(--border); background: var(--surface); }
+    .control { display: grid; gap: 7px; min-width: 0; }
+    .control-head { display: flex; justify-content: space-between; gap: 10px; font-size: .78rem; font-weight: 650; }
+    .control output { color: var(--primary); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+    .control.disabled { opacity: .45; }
+
+    .lesson-column { display: flex; flex-direction: column; min-width: 0; }
+    .lesson { flex: 1; padding: clamp(22px, 3vw, 34px); }
+    .lesson-number { margin: 0 0 7px; color: var(--primary); font-size: .72rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .lesson h2 { margin: 0 0 14px; font-size: 1.35rem; line-height: 1.2; }
+    .lesson p { margin: 0 0 16px; color: var(--muted); font-size: .9rem; line-height: 1.58; }
+    .equation { margin: 20px 0; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); color: var(--foreground); background: transparent; font-family: Georgia, "Times New Roman", Times, serif; font-size: .88rem; line-height: 1.75; overflow-wrap: anywhere; }
+    .equation strong { color: var(--primary); font-weight: 700; }
+    .key-list { display: grid; gap: 9px; margin: 18px 0 0; padding: 0; list-style: none; }
+    .key-list li { display: grid; grid-template-columns: 18px 1fr; gap: 9px; align-items: start; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+    .key-list i { width: 11px; height: 11px; margin-top: 4px; border-radius: 50%; background: var(--primary); }
+    .bounds { width: 100%; margin: 15px 0; border-collapse: collapse; font-size: .8rem; }
+    .bounds th, .bounds td { padding: 8px 7px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+    .bounds th:first-child, .bounds td:first-child { text-align: left; }
+    .bounds th { color: var(--muted); font-weight: 650; }
+    .note { padding: 8px 0 8px 12px; border-left: 1px solid var(--border-strong); color: var(--muted); background: transparent; font-size: .78rem; line-height: 1.5; }
+
+    .lesson-footer { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--border); background: var(--surface); }
+    .selected-readout { color: var(--muted); font-family: Georgia, "Times New Roman", Times, serif; font-size: .76rem; line-height: 1.45; }
+    .nav-buttons { display: flex; gap: 8px; }
+    .nav-button { min-height: 38px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 0; color: var(--foreground); background: var(--surface); cursor: pointer; font-weight: 650; }
+    .nav-button.primary { border-color: var(--primary); color: var(--primary-foreground); background: var(--primary); }
+    .nav-button:disabled { opacity: .42; cursor: default; }
+
+    .safety { margin: 14px 2px 0; color: var(--muted); font-size: .72rem; text-align: center; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; }
+      .visual-column { border-right: 0; border-bottom: 1px solid var(--border); }
+      .lesson { min-height: 390px; }
+    }
+    @media (max-width: 620px) {
+      .page { padding-inline: 10px; }
+      .topbar { grid-template-columns: 1fr auto; gap: 12px; }
+      .title-block { grid-column: 1 / -1; grid-row: 1; }
+      .back-link { grid-row: 2; }
+      .profile-badge { grid-row: 2; }
+      .step-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workspace { min-height: 0; }
+      .controls { grid-template-columns: 1fr; gap: 12px; }
+      .lesson-footer { grid-template-columns: 1fr; }
+      .nav-buttons { justify-content: stretch; }
+      .nav-button { flex: 1; }
+      canvas, .canvas-wrap { min-height: 350px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="step-tabs" aria-label="Task-space calculation steps" role="tablist">
+      <button class="step-tab" type="button" role="tab" aria-selected="true" data-step="0"><span>Step 1</span><strong>Angle domain</strong></button>
+      <button class="step-tab" type="button" role="tab" aria-selected="false" data-step="1"><span>Step 2</span><strong>Cross-section</strong></button>
+      <button class="step-tab" type="button" role="tab" aria-selected="false" data-step="2"><span>Step 3</span><strong>Base sweep</strong></button>
+      <button class="step-tab" type="button" role="tab" aria-selected="false" data-step="3"><span>Step 4</span><strong>Final boundary</strong></button>
+    </nav>
+
+    <main class="workspace">
+      <section class="visual-column" aria-labelledby="visual-title">
+        <div class="visual-heading">
+          <div><h2 id="visual-title">Configuration space</h2><p id="visual-subtitle">One point inside the three-angle domain</p></div>
+          <span id="step-count" class="step-count">1 of 4</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="lab-canvas" role="img" aria-describedby="canvas-description"></canvas>
+          <span id="drag-hint" class="drag-hint">Drag to rotate</span>
+          <p id="canvas-description" class="sr-only">Interactive visualization of the MeArm task-space calculation.</p>
+        </div>
+        <div id="joint-controls" class="controls" aria-label="Demonstration joint angles">
+          <label class="control" id="base-control"><span class="control-head"><span>Base β</span><output id="base-output" for="base-range">0°</output></span><input id="base-range" aria-label="Base angle" type="range" min="-45" max="45" step="1" value="0" /></label>
+          <label class="control"><span class="control-head"><span>Shoulder s</span><output id="shoulder-output" for="shoulder-range">90°</output></span><input id="shoulder-range" aria-label="Shoulder angle" type="range" min="45" max="135" step="1" value="90" /></label>
+          <label class="control"><span class="control-head"><span>Elbow e</span><output id="elbow-output" for="elbow-range">0°</output></span><input id="elbow-range" aria-label="Elbow angle" type="range" min="-45" max="45" step="1" value="0" /></label>
+        </div>
+      </section>
+
+      <aside class="lesson-column" aria-live="polite">
+        <div id="lesson" class="lesson"></div>
+        <footer class="lesson-footer">
+          <div id="selected-readout" class="selected-readout"></div>
+          <div class="nav-buttons">
+            <button id="previous-step" class="nav-button" type="button" disabled>Previous</button>
+            <button id="next-step" class="nav-button primary" type="button">Next step</button>
+          </div>
+        </footer>
+      </aside>
+    </main>
+    <p class="safety">Mathematical simulation only — physical calibration, torque, collisions, wiring, and table clearance are not included.</p>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const profile = {
+        l1: 80,
+        l2: 80,
+        l3: 22,
+        base: [-45, 45],
+        shoulder: [45, 135],
+        elbow: [-45, 45],
+      };
+      const bounds = { x: [-112.1249, 112.1249], y: [15.5563, 158.5685], z: [0, 136.5685] };
+      const canvas = document.getElementById("lab-canvas");
+      const context = canvas.getContext("2d");
+      const lesson = document.getElementById("lesson");
+      const title = document.getElementById("visual-title");
+      const subtitle = document.getElementById("visual-subtitle");
+      const stepCount = document.getElementById("step-count");
+      const readout = document.getElementById("selected-readout");
+      const description = document.getElementById("canvas-description");
+      const dragHint = document.getElementById("drag-hint");
+      const previousButton = document.getElementById("previous-step");
+      const nextButton = document.getElementById("next-step");
+      const baseControl = document.getElementById("base-control");
+      const baseRange = document.getElementById("base-range");
+      const shoulderRange = document.getElementById("shoulder-range");
+      const elbowRange = document.getElementById("elbow-range");
+      const baseOutput = document.getElementById("base-output");
+      const shoulderOutput = document.getElementById("shoulder-output");
+      const elbowOutput = document.getElementById("elbow-output");
+      const stepTabs = [...document.querySelectorAll(".step-tab")];
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+      const state = {
+        step: 0,
+        base: 0,
+        shoulder: 90,
+        elbow: 0,
+        yaw: -0.58,
+        pitch: 0.42,
+        dragging: false,
+        pointerX: 0,
+        pointerY: 0,
+        sweep: 1,
+        animationFrame: 0,
+      };
+
+      const degree = Math.PI / 180;
+      const toRadians = (value) => value * degree;
+      const lerp = (start, end, amount) => start + (end - start) * amount;
+      const format = (value, digits = 1) => Number(value).toFixed(digits);
+      const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+      function forward(base, shoulder, elbow) {
+        const b = toRadians(base);
+        const s = toRadians(shoulder);
+        const e = toRadians(elbow);
+        const rho = profile.l3 + profile.l1 * Math.cos(s) + profile.l2 * Math.cos(e);
+        return {
+          rho,
+          x: rho * Math.sin(b),
+          y: rho * Math.cos(b),
+          z: profile.l1 * Math.sin(s) + profile.l2 * Math.sin(e),
+        };
+      }
+
+      function palette() {
+        return {
+          foreground: css("--foreground"),
+          muted: css("--muted"),
+          border: css("--border-strong"),
+          grid: css("--grid"),
+          primary: css("--primary"),
+          surface: css("--surface"),
+          soft: css("--surface-soft"),
+          series: [css("--series-1"), css("--series-2"), css("--series-3"), css("--series-4")],
+        };
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.round(rect.width * ratio));
+        canvas.height = Math.max(1, Math.round(rect.height * ratio));
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        draw();
+      }
+
+      function line(points, stroke, width = 1, dash = []) {
+        if (points.length < 2) return;
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        for (let index = 1; index < points.length; index += 1) context.lineTo(points[index].x, points[index].y);
+        context.setLineDash(dash);
+        context.strokeStyle = stroke;
+        context.lineWidth = width;
+        context.stroke();
+        context.setLineDash([]);
+      }
+
+      function dot(point, radius, fill, stroke) {
+        context.beginPath();
+        context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        context.fillStyle = fill;
+        context.fill();
+        if (stroke) {
+          context.strokeStyle = stroke;
+          context.lineWidth = 2;
+          context.stroke();
+        }
+      }
+
+      function label(text, x, y, color, align = "left", weight = 500) {
+        context.fillStyle = color;
+        context.font = `${weight} 12px Georgia, "Times New Roman", Times, serif`;
+        context.textAlign = align;
+        context.textBaseline = "middle";
+        context.fillText(text, x, y);
+      }
+
+      function projectWorld(point, width, height) {
+        const centered = { x: point.x, y: point.y - 84, z: point.z - 66 };
+        const cosYaw = Math.cos(state.yaw);
+        const sinYaw = Math.sin(state.yaw);
+        const cosPitch = Math.cos(state.pitch);
+        const sinPitch = Math.sin(state.pitch);
+        const horizontal = cosYaw * centered.x - sinYaw * centered.y;
+        const depthAxis = sinYaw * centered.x + cosYaw * centered.y;
+        const vertical = cosPitch * centered.z - sinPitch * depthAxis;
+        const depth = sinPitch * centered.z + cosPitch * depthAxis;
+        const scale = Math.min(width / 315, height / 245);
+        return { x: width * 0.5 + horizontal * scale, y: height * 0.53 - vertical * scale, depth };
+      }
+
+      function projectCube(point, width, height) {
+        const cosYaw = Math.cos(state.yaw);
+        const sinYaw = Math.sin(state.yaw);
+        const cosPitch = Math.cos(state.pitch);
+        const sinPitch = Math.sin(state.pitch);
+        const horizontal = cosYaw * point.x - sinYaw * point.y;
+        const depthAxis = sinYaw * point.x + cosYaw * point.y;
+        const vertical = cosPitch * point.z - sinPitch * depthAxis;
+        const depth = sinPitch * point.z + cosPitch * depthAxis;
+        const scale = Math.min(width, height) * 0.23;
+        return { x: width * 0.5 + horizontal * scale, y: height * 0.51 - vertical * scale, depth };
+      }
+
+      function cubeVertices() {
+        const result = [];
+        for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) result.push({ x, y, z });
+        return result;
+      }
+
+      function drawConfiguration(width, height, colors) {
+        const vertices = cubeVertices();
+        const projected = vertices.map((point) => projectCube(point, width, height));
+        const edges = [];
+        for (let first = 0; first < vertices.length; first += 1) {
+          for (let second = first + 1; second < vertices.length; second += 1) {
+            const a = vertices[first];
+            const b = vertices[second];
+            const difference = Number(a.x !== b.x) + Number(a.y !== b.y) + Number(a.z !== b.z);
+            if (difference === 1) edges.push([projected[first], projected[second]]);
+          }
+        }
+        context.globalAlpha = 0.12;
+        const face = [
+          projectCube({ x: -1, y: 1, z: -1 }, width, height),
+          projectCube({ x: 1, y: 1, z: -1 }, width, height),
+          projectCube({ x: 1, y: 1, z: 1 }, width, height),
+          projectCube({ x: -1, y: 1, z: 1 }, width, height),
+        ];
+        context.beginPath();
+        face.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+        context.closePath();
+        context.fillStyle = colors.primary;
+        context.fill();
+        context.globalAlpha = 1;
+        edges.forEach((edge) => line(edge, colors.border, 1.25));
+
+        const normalized = {
+          x: lerp(-1, 1, (state.base - profile.base[0]) / (profile.base[1] - profile.base[0])),
+          y: lerp(-1, 1, (state.elbow - profile.elbow[0]) / (profile.elbow[1] - profile.elbow[0])),
+          z: lerp(-1, 1, (state.shoulder - profile.shoulder[0]) / (profile.shoulder[1] - profile.shoulder[0])),
+        };
+        const selected = projectCube(normalized, width, height);
+        const baseProjection = projectCube({ x: normalized.x, y: -1, z: -1 }, width, height);
+        const elbowProjection = projectCube({ x: normalized.x, y: normalized.y, z: -1 }, width, height);
+        line([baseProjection, elbowProjection, selected], colors.primary, 2, [5, 4]);
+        dot(selected, 7, colors.primary, colors.surface);
+
+        const origin = projectCube({ x: -1, y: -1, z: -1 }, width, height);
+        const baseEnd = projectCube({ x: 1, y: -1, z: -1 }, width, height);
+        const elbowEnd = projectCube({ x: -1, y: 1, z: -1 }, width, height);
+        const shoulderEnd = projectCube({ x: -1, y: -1, z: 1 }, width, height);
+        label("base β  −45° → 45°", baseEnd.x + 8, baseEnd.y, colors.series[0]);
+        label("elbow e  −45° → 45°", elbowEnd.x - 6, elbowEnd.y + 14, colors.series[2], "right");
+        label("shoulder s  45° → 135°", Math.max(12, shoulderEnd.x + 8), shoulderEnd.y - 10, colors.series[1]);
+        label("Q", origin.x - 8, origin.y + 15, colors.muted, "right", 700);
+      }
+
+      function sample(start, end, count, callback) {
+        return Array.from({ length: count + 1 }, (_, index) => callback(lerp(start, end, index / count)));
+      }
+
+      function planar(shoulder, elbow) {
+        const result = forward(0, shoulder, elbow);
+        return { rho: result.rho, z: result.z };
+      }
+
+      function boundaryCurves() {
+        return [
+          { name: "shoulder = 45°", points: sample(-45, 45, 40, (elbow) => planar(45, elbow)) },
+          { name: "elbow = 45°", points: sample(45, 135, 40, (shoulder) => planar(shoulder, 45)) },
+          { name: "shoulder = 135°", points: sample(45, -45, 40, (elbow) => planar(135, elbow)) },
+          { name: "elbow = −45°", points: sample(135, 45, 40, (shoulder) => planar(shoulder, -45)) },
+        ];
+      }
+
+      function drawCrossSection(width, height, colors) {
+        const margin = { left: 54, right: 24, top: 28, bottom: 48 };
+        const plotWidth = width - margin.left - margin.right;
+        const plotHeight = height - margin.top - margin.bottom;
+        const x = (rho) => margin.left + rho / 170 * plotWidth;
+        const y = (z) => margin.top + plotHeight - z / 145 * plotHeight;
+        [0, 40, 80, 120, 160].forEach((value) => {
+          line([{ x: x(value), y: margin.top }, { x: x(value), y: margin.top + plotHeight }], colors.grid);
+          label(String(value), x(value), margin.top + plotHeight + 19, colors.muted, "center", 400);
+        });
+        [0, 40, 80, 120].forEach((value) => {
+          line([{ x: margin.left, y: y(value) }, { x: margin.left + plotWidth, y: y(value) }], colors.grid);
+          label(String(value), margin.left - 9, y(value), colors.muted, "right", 400);
+        });
+        line([{ x: margin.left, y: margin.top }, { x: margin.left, y: margin.top + plotHeight }, { x: margin.left + plotWidth, y: margin.top + plotHeight }], colors.border, 1.3);
+        label("radial distance ρ (mm)", margin.left + plotWidth / 2, height - 13, colors.muted, "center", 500);
+        context.save();
+        context.translate(15, margin.top + plotHeight / 2);
+        context.rotate(-Math.PI / 2);
+        label("height z (mm)", 0, 0, colors.muted, "center", 500);
+        context.restore();
+
+        const curves = boundaryCurves();
+        const outline = curves.flatMap((curve) => curve.points).map((point) => ({ x: x(point.rho), y: y(point.z) }));
+        context.beginPath();
+        outline.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+        context.closePath();
+        context.globalAlpha = 0.13;
+        context.fillStyle = colors.primary;
+        context.fill();
+        context.globalAlpha = 1;
+        const patterns = [[], [9, 5], [2, 4], [11, 4, 2, 4]];
+        curves.forEach((curve, index) => line(curve.points.map((point) => ({ x: x(point.rho), y: y(point.z) })), colors.foreground, 2.4, patterns[index]));
+
+        const shoulder = toRadians(state.shoulder);
+        const elbow = toRadians(state.elbow);
+        const elbowJoint = { rho: profile.l1 * Math.cos(shoulder), z: profile.l1 * Math.sin(shoulder) };
+        const wrist = { rho: elbowJoint.rho + profile.l2 * Math.cos(elbow), z: elbowJoint.z + profile.l2 * Math.sin(elbow) };
+        const endpoint = { rho: wrist.rho + profile.l3, z: wrist.z };
+        line([
+          { x: x(0), y: y(0) },
+          { x: x(elbowJoint.rho), y: y(elbowJoint.z) },
+          { x: x(wrist.rho), y: y(wrist.z) },
+          { x: x(endpoint.rho), y: y(endpoint.z) },
+        ], colors.foreground, 4);
+        dot({ x: x(elbowJoint.rho), y: y(elbowJoint.z) }, 4, colors.foreground, colors.surface);
+        dot({ x: x(wrist.rho), y: y(wrist.z) }, 4, colors.foreground, colors.surface);
+        dot({ x: x(endpoint.rho), y: y(endpoint.z) }, 7, colors.primary, colors.surface);
+
+        const legendY = margin.top + 4;
+        curves.forEach((curve, index) => {
+          const column = index % 2;
+          const row = Math.floor(index / 2);
+          const left = margin.left + 12 + column * Math.max(145, plotWidth * 0.48);
+          const top = legendY + row * 18;
+          line([{ x: left, y: top }, { x: left + 18, y: top }], colors.foreground, 2.4, patterns[index]);
+          label(curve.name, left + 24, top, colors.muted, "left", 500);
+        });
+      }
+
+      function polarToWorld(point, base) {
+        const angle = toRadians(base);
+        return { x: point.rho * Math.sin(angle), y: point.rho * Math.cos(angle), z: point.z };
+      }
+
+      function drawTaskSpace(width, height, colors, includeBounds) {
+        const curves = boundaryCurves();
+        const minimumBase = profile.base[0];
+        const maximumBase = lerp(profile.base[0], profile.base[1], state.step === 2 ? state.sweep : 1);
+        const faces = [];
+        const baseSegments = 12;
+
+        curves.forEach((curve, curveIndex) => {
+          for (let pointIndex = 0; pointIndex < curve.points.length - 1; pointIndex += 1) {
+            for (let baseIndex = 0; baseIndex < baseSegments; baseIndex += 1) {
+              const startBase = lerp(minimumBase, maximumBase, baseIndex / baseSegments);
+              const endBase = lerp(minimumBase, maximumBase, (baseIndex + 1) / baseSegments);
+              const worldPoints = [
+                polarToWorld(curve.points[pointIndex], startBase),
+                polarToWorld(curve.points[pointIndex + 1], startBase),
+                polarToWorld(curve.points[pointIndex + 1], endBase),
+                polarToWorld(curve.points[pointIndex], endBase),
+              ];
+              const projected = worldPoints.map((point) => projectWorld(point, width, height));
+              faces.push({ points: projected, depth: projected.reduce((sum, point) => sum + point.depth, 0) / 4, color: colors.series[curveIndex] });
+            }
+          }
+        });
+        faces.sort((a, b) => a.depth - b.depth);
+        context.globalAlpha = 0.055;
+        faces.forEach((face) => {
+          context.beginPath();
+          face.points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+          context.closePath();
+          context.fillStyle = face.color;
+          context.fill();
+        });
+        context.globalAlpha = 1;
+
+        const boundary = curves.flatMap((curve) => curve.points);
+        for (const base of [minimumBase, maximumBase]) {
+          const projected = boundary.map((point) => projectWorld(polarToWorld(point, base), width, height));
+          context.globalAlpha = 0.12;
+          context.beginPath();
+          projected.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+          context.closePath();
+          context.fillStyle = colors.primary;
+          context.fill();
+          context.globalAlpha = 1;
+          line(projected.concat(projected[0]), colors.primary, 1.7);
+        }
+
+        const guideBases = sample(minimumBase, maximumBase, 6, (value) => value);
+        guideBases.forEach((base) => curves.forEach((curve, index) => {
+          line(curve.points.map((point) => projectWorld(polarToWorld(point, base), width, height)), colors.series[index], 0.75);
+        }));
+        curves.forEach((curve, curveIndex) => {
+          for (let index = 0; index < curve.points.length; index += 8) {
+            const arc = sample(minimumBase, maximumBase, 24, (base) => projectWorld(polarToWorld(curve.points[index], base), width, height));
+            line(arc, colors.series[curveIndex], 0.75);
+          }
+        });
+
+        const selectedPlanar = planar(state.shoulder, state.elbow);
+        const selectedArc = sample(minimumBase, maximumBase, 48, (base) => projectWorld(polarToWorld(selectedPlanar, base), width, height));
+        line(selectedArc, colors.primary, 3);
+        const current = projectWorld(forward(state.base, state.shoulder, state.elbow), width, height);
+        dot(current, 7, colors.primary, colors.surface);
+
+        const origin = projectWorld({ x: 0, y: 0, z: 0 }, width, height);
+        dot(origin, 4, colors.foreground, colors.surface);
+        label("base", origin.x + 8, origin.y + 2, colors.muted);
+
+        if (includeBounds) drawBoundingBox(width, height, colors);
+      }
+
+      function drawBoundingBox(width, height, colors) {
+        const vertices = [];
+        for (const x of bounds.x) for (const y of bounds.y) for (const z of bounds.z) vertices.push({ x, y, z });
+        for (let first = 0; first < vertices.length; first += 1) {
+          for (let second = first + 1; second < vertices.length; second += 1) {
+            const a = vertices[first];
+            const b = vertices[second];
+            const differences = Number(a.x !== b.x) + Number(a.y !== b.y) + Number(a.z !== b.z);
+            if (differences === 1) line([projectWorld(a, width, height), projectWorld(b, width, height)], colors.border, 1, [5, 5]);
+          }
+        }
+        const highest = projectWorld({ x: 0, y: 78.5685, z: 136.5685 }, width, height);
+        dot(highest, 5, colors.series[1], colors.surface);
+        label("z max 136.6 mm", highest.x + 8, highest.y - 9, colors.series[1]);
+        const widest = projectWorld({ x: 112.1249, y: 112.1249, z: 56.5685 }, width, height);
+        dot(widest, 5, colors.series[2], colors.surface);
+        label("x max 112.1 mm", widest.x + 8, widest.y + 10, colors.series[2]);
+      }
+
+      function draw() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = canvas.width / ratio;
+        const height = canvas.height / ratio;
+        const colors = palette();
+        context.clearRect(0, 0, width, height);
+        if (state.step === 0) drawConfiguration(width, height, colors);
+        else if (state.step === 1) drawCrossSection(width, height, colors);
+        else drawTaskSpace(width, height, colors, state.step === 3);
+      }
+
+      function selectedValues() {
+        return forward(state.base, state.shoulder, state.elbow);
+      }
+
+      function lessonMarkup() {
+        const point = selectedValues();
+        const cosineShoulder = format(Math.cos(toRadians(state.shoulder)), 3);
+        const cosineElbow = format(Math.cos(toRadians(state.elbow)), 3);
+        const sineShoulder = format(Math.sin(toRadians(state.shoulder)), 3);
+        const sineElbow = format(Math.sin(toRadians(state.elbow)), 3);
+        if (state.step === 0) return `
+          <p class="lesson-number">Step 1 · Configuration space</p>
+          <h2>Start with every allowed angle</h2>
+          <p>The three servo ranges form a rectangular three-dimensional domain. The highlighted point is one complete arm configuration; move the sliders to move it through the domain.</p>
+          <div class="equation">Base β ∈ [−45°, 45°]<br />Shoulder s ∈ [45°, 135°]<br />Elbow e ∈ [−45°, 45°]<br /><br />Q = Base × Shoulder × Elbow<br /><strong>q = (${state.base}°, ${state.shoulder}°, ${state.elbow}°)</strong></div>
+          <ul class="key-list"><li><i></i><span>Base controls rotation around the vertical axis.</span></li><li><i></i><span>Shoulder and elbow determine the radial/vertical cross-section.</span></li><li><i></i><span>The claw-opening servo does not change the endpoint position.</span></li></ul>`;
+        if (state.step === 1) return `
+          <p class="lesson-number">Step 2 · Planar mapping</p>
+          <h2>Map shoulder and elbow into ρ and z</h2>
+          <p>Each edge of the shoulder/elbow rectangle becomes a circular arc. The four arcs enclose the reachable arm-plane cross-section; the dark links show the selected configuration.</p>
+          <div class="equation">ρ = 22 + 80 cos(s) + 80 cos(e)<br />= 22 + 80(${cosineShoulder}) + 80(${cosineElbow})<br /><strong>= ${format(point.rho)} mm</strong><br /><br />z = 80 sin(s) + 80 sin(e)<br />= 80(${sineShoulder}) + 80(${sineElbow})<br /><strong>= ${format(point.z)} mm</strong></div>
+          <p class="note">The elbow angle is an absolute link angle in this model. It is not added to the shoulder angle.</p>`;
+        if (state.step === 2) return `
+          <p class="lesson-number">Step 3 · Base sweep</p>
+          <h2>Rotate the cross-section into Cartesian space</h2>
+          <p>The base servo sweeps every reachable (ρ, z) point through a horizontal arc. Together those arcs form the three-dimensional task-space wedge.</p>
+          <div class="equation">x = ρ sin(β) = ${format(point.rho)} sin(${state.base}°)<br /><strong>x = ${format(point.x)} mm</strong><br />y = ρ cos(β) = ${format(point.rho)} cos(${state.base}°)<br /><strong>y = ${format(point.y)} mm</strong><br />z = <strong>${format(point.z)} mm</strong></div>
+          <p class="note">The selected point follows the emphasized arc. Drag the view to inspect the sweep from another angle.</p>`;
+        return `
+          <p class="lesson-number">Step 4 · Result</p>
+          <h2>Read the boundary, not just the box</h2>
+          <p>The six mapped servo-limit faces form the exact mathematical boundary for the default profile. The dashed Cartesian box is useful for camera fitting, but points inside that box are not automatically reachable.</p>
+          <table class="bounds"><thead><tr><th>Axis</th><th>Minimum</th><th>Maximum</th></tr></thead><tbody><tr><td>x</td><td>−112.1 mm</td><td>112.1 mm</td></tr><tr><td>y</td><td>15.6 mm</td><td>158.6 mm</td></tr><tr><td>z</td><td>0.0 mm</td><td>136.6 mm</td></tr></tbody></table>
+          <div class="equation">|det J| = |ρ L₁ L₂ sin(s − e)|<br /><strong>No interior singularity for the default limits.</strong></div>
+          <p class="note">Wider custom limits can introduce folds or interior singularities. This lesson demonstrates the verified default profile.</p>`;
+      }
+
+      function updateInterface() {
+        const names = [
+          ["Configuration space", "One point inside the three-angle domain"],
+          ["Radial/vertical cross-section", "Four curved images of the planar angle limits"],
+          ["Cartesian base sweep", "Every (ρ, z) point traces a horizontal arc"],
+          ["Servo-limited task space", "Six mapped faces and the enclosing Cartesian bounds"],
+        ];
+        const point = selectedValues();
+        title.textContent = names[state.step][0];
+        subtitle.textContent = names[state.step][1];
+        stepCount.textContent = `${state.step + 1} of 4`;
+        baseOutput.textContent = `${state.base}°`;
+        shoulderOutput.textContent = `${state.shoulder}°`;
+        elbowOutput.textContent = `${state.elbow}°`;
+        lesson.innerHTML = lessonMarkup();
+        readout.textContent = state.step === 0
+          ? `q = (${state.base}°, ${state.shoulder}°, ${state.elbow}°)`
+          : state.step === 1
+            ? `(ρ, z) = (${format(point.rho)}, ${format(point.z)}) mm`
+            : `(x, y, z) = (${format(point.x)}, ${format(point.y)}, ${format(point.z)}) mm`;
+        previousButton.disabled = state.step === 0;
+        nextButton.disabled = state.step === 3;
+        nextButton.textContent = state.step === 2 ? "Show result" : "Next step";
+        stepTabs.forEach((tab, index) => tab.setAttribute("aria-selected", String(index === state.step)));
+        baseRange.disabled = state.step === 1;
+        baseControl.classList.toggle("disabled", state.step === 1);
+        dragHint.hidden = state.step === 1;
+        const descriptions = [
+          `Three-dimensional configuration domain with selected angles base ${state.base}, shoulder ${state.shoulder}, elbow ${state.elbow} degrees.`,
+          `Radial and vertical reachable cross-section with selected point rho ${format(point.rho)} millimeters and z ${format(point.z)} millimeters.`,
+          `Three-dimensional base sweep with selected endpoint x ${format(point.x)}, y ${format(point.y)}, z ${format(point.z)} millimeters.`,
+          "Complete default task-space boundary with its enclosing Cartesian bounds.",
+        ];
+        canvas.setAttribute("aria-label", descriptions[state.step]);
+        description.textContent = descriptions[state.step];
+        draw();
+      }
+
+      function animateSweep() {
+        cancelAnimationFrame(state.animationFrame);
+        if (state.step !== 2 || reducedMotion.matches) {
+          state.sweep = 1;
+          draw();
+          return;
+        }
+        const started = performance.now();
+        state.sweep = 0;
+        const frame = (time) => {
+          const progress = Math.min(1, (time - started) / 1050);
+          state.sweep = 1 - Math.pow(1 - progress, 3);
+          draw();
+          if (progress < 1 && state.step === 2) state.animationFrame = requestAnimationFrame(frame);
+        };
+        state.animationFrame = requestAnimationFrame(frame);
+      }
+
+      function setStep(step) {
+        state.step = Math.max(0, Math.min(3, step));
+        updateInterface();
+        animateSweep();
+      }
+
+      function updateAngles() {
+        state.base = Number(baseRange.value);
+        state.shoulder = Number(shoulderRange.value);
+        state.elbow = Number(elbowRange.value);
+        updateInterface();
+      }
+
+      [baseRange, shoulderRange, elbowRange].forEach((input) => input.addEventListener("input", updateAngles));
+      stepTabs.forEach((tab) => tab.addEventListener("click", () => setStep(Number(tab.dataset.step))));
+      previousButton.addEventListener("click", () => setStep(state.step - 1));
+      nextButton.addEventListener("click", () => setStep(state.step + 1));
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (state.step === 1) return;
+        state.dragging = true;
+        state.pointerX = event.clientX;
+        state.pointerY = event.clientY;
+        canvas.classList.add("dragging");
+        canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (!state.dragging) return;
+        state.yaw += (event.clientX - state.pointerX) * 0.008;
+        state.pitch = Math.max(-0.55, Math.min(1.05, state.pitch + (event.clientY - state.pointerY) * 0.006));
+        state.pointerX = event.clientX;
+        state.pointerY = event.clientY;
+        draw();
+      });
+      const releasePointer = () => { state.dragging = false; canvas.classList.remove("dragging"); };
+      canvas.addEventListener("pointerup", releasePointer);
+      canvas.addEventListener("pointercancel", releasePointer);
+
+      new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+      colorScheme.addEventListener("change", draw);
+      reducedMotion.addEventListener("change", () => { state.sweep = 1; draw(); });
+      updateInterface();
+      resizeCanvas();
+      requestAnimationFrame(resizeCanvas);
+      window.addEventListener("load", resizeCanvas, { once: true });
+    })();
+  </script>
+</body>
+</html>

@@ -20,7 +20,7 @@
 - Built the simplified MeArm transform hierarchy.
 - Connected deterministic playback state to arm and claw transforms.
 - Added path rendering, coordinate labels, grid, axes, orbit/zoom, fit/reset,
-  and camera presets.
+  camera presets, and a servo-limited task-space boundary.
 - Added valid, caution, and invalid visual states.
 
 ## Phase 3: classroom workspace — complete
