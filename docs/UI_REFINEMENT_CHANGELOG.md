@@ -99,8 +99,8 @@ non-blocking performance notice and is unrelated to these UI refinements.
 
 ## 2026-07-13: classroom editing follow-up
 
-- Added copyable HOME, LEFT, RIGHT, HIGH, LOW, and common delay commands to the
-  inspector.
+- Added copyable HOME, LEFT, RIGHT, HIGH, LOW, common delay, and open/close claw
+  commands to the inspector.
 - Added a minimal Free form example with inclusive X `-100..100`, Y `100..200`,
   and Z `0..150` millimeter validation and an on-canvas limits reminder.
 - Added Reset code for restoring the active bundled example.

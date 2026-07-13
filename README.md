@@ -34,7 +34,8 @@ see the [validation report](docs/VALIDATION_REPORT.md) for the exact boundary.
   `0.25x` through `4x`.
 - Clickable command markers in the editor gutter and a source-line link in the
   motion inspector.
-- Copyable HOME, LEFT, RIGHT, HIGH, LOW, and common delay commands.
+- Copyable HOME, LEFT, RIGHT, HIGH, LOW, common delay, and open/close claw
+  commands.
 - Orbit, zoom, fit, reset, camera presets, path, grid, axes, and coordinate
   labels in the 3D view.
 - Instructor-editable link lengths, HOME coordinates, and servo-angle limits.

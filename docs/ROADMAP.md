@@ -28,7 +28,7 @@
 - Added editable Instructor, Student, and Free form examples.
 - Added playback, stepping, scrubbing, speed, repeat, and source linking.
 - Added syntax highlighting, clickable gutter checkpoints, reset behavior, and
-  copyable pose/delay commands.
+  copyable pose, delay, and claw commands.
 - Added Free form coordinate bounds and instructor-editable simulation settings.
 - Added responsive layouts, labels, focus styles, and textual status cues.
 

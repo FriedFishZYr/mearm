@@ -18,7 +18,6 @@ const presetCommandButtons = DEFAULT_PROFILE.approvedPoses.map((pose) => {
   return `<button class="copy-command preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}">
     <span class="preset-name">${pose.name}</span>
     <code>${command}</code>
-    <span class="preset-copy-label" aria-hidden="true">Copy</span>
   </button>`;
 }).join("");
 const delayCommandButtons = [250, 500, 1000, 2000].map((milliseconds) => {
@@ -27,6 +26,10 @@ const delayCommandButtons = [250, 500, 1000, 2000].map((milliseconds) => {
     <strong>${milliseconds}</strong><small>ms</small>
   </button>`;
 }).join("");
+const clawCommandButtons = [
+  { name: "Open claw", command: "arm.openClaw();" },
+  { name: "Close claw", command: "arm.closeClaw();" },
+].map(({ name, command }) => `<button class="copy-command claw-command" type="button" data-command="${command}" data-preset-name="${name}" aria-label="Copy ${command}" title="Copy ${command}"><code>${command}</code></button>`).join("");
 
 app.innerHTML = `
   <div class="app-shell">
@@ -170,6 +173,12 @@ app.innerHTML = `
             <span class="delay-command-label">Delay</span>
             <div class="delay-command-row" aria-label="Delay commands">
               ${delayCommandButtons}
+            </div>
+          </div>
+          <div class="claw-command-group">
+            <span class="claw-command-label">Claw</span>
+            <div class="claw-command-row" aria-label="Claw commands">
+              ${clawCommandButtons}
             </div>
           </div>
         </section>
@@ -465,13 +474,10 @@ async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
   window.clearTimeout(copyFeedbackTimer);
   const previousButton = document.querySelector<HTMLButtonElement>(".copy-command.copied");
   previousButton?.classList.remove("copied");
-  previousButton?.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copy");
   button.classList.add("copied");
-  button.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copied");
   get("preset-copy-status").textContent = `${presetName} copied`;
   copyFeedbackTimer = window.setTimeout(() => {
     button.classList.remove("copied");
-    button.querySelector<HTMLElement>(".preset-copy-label")?.replaceChildren("Copy");
     get("preset-copy-status").textContent = "Click to copy";
   }, 1800);
 }

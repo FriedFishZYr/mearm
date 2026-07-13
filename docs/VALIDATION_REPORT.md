@@ -36,7 +36,7 @@ Source-level tests confirm the presence and wiring contracts for:
   settings fields, preset groups, and Free form limits;
 - textual valid, caution, invalid, and code-error states;
 - disabling playback after a failed preview;
-- copyable approved-pose and delay commands;
+- copyable approved-pose, delay, and open/close claw commands;
 - clickable command markers and timeline scrubbing;
 - Instructor, Student, and Free form sample selection; and
 - viewport, settings, and playback controls.
@@ -70,7 +70,7 @@ The recorded passes do not explicitly cover every feature added afterward.
 Before 1.0, verify the current production build for:
 
 1. Free form limit display, inclusive boundary values, and line-linked failures;
-2. pose and delay clipboard actions, including visible/announced feedback;
+2. pose, delay, and claw clipboard actions, including visible/announced feedback;
 3. gutter command checkpoints and the inspector source-line link;
 4. Reset code for all three active examples;
 5. every camera preset and viewport visibility toggle;

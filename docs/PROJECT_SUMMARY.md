@@ -26,7 +26,7 @@ remains the release blocker for classroom-ready version 1.0.
 - Instructor dance, Student starter, and Free form examples.
 - Inclusive Free form bounds of X `-100..100`, Y `100..200`, and Z `0..150`
   millimeters before reachability and limit validation.
-- Copyable approved-pose and common-delay commands.
+- Copyable approved-pose, common-delay, and open/close claw commands.
 - In-memory instructor settings for link lengths, HOME, and joint limits.
 - A static Vite build with no external runtime assets or backend.
 

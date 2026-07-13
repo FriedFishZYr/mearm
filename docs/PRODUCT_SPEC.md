@@ -85,7 +85,8 @@ the command responsible for a pose, and identify warnings before upload.
 - Mark commands as valid, warning, unsupported, or invalid.
 - Keep warnings visible when playback is paused or scrubbed.
 - Link parsed commands to clickable source-gutter checkpoints.
-- Provide copyable complete commands for approved poses and common delays.
+- Provide copyable complete commands for approved poses, common delays, and
+  open/close claw actions.
 
 ### Configuration
 

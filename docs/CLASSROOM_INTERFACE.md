@@ -79,9 +79,9 @@ preview is stale triggers recompilation before Play can continue.
 
 The **Preset commands** section copies complete `arm.moveToXYZ(...)` statements
 for HOME, LEFT, RIGHT, HIGH, and LOW. It also copies `delay(...)` statements for
-250, 500, 1000, and 2000 milliseconds. Copy status is announced in a live
-status region, and a fallback copy path is used when the Clipboard API is not
-available.
+250, 500, 1000, and 2000 milliseconds, plus `arm.openClaw();` and
+`arm.closeClaw();`. Copy status is announced in a live status region, and a
+fallback copy path is used when the Clipboard API is not available.
 
 Presets are editing aids, not proof of physical safety. The approved pose list
 comes from the default profile and must still be checked on the classroom arm.
