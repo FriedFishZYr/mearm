@@ -15,7 +15,7 @@ if (!app) throw new Error("Application root was not found.");
 const presetCommand = (pose: Point3): string => `arm.moveToXYZ(${pose.x}, ${pose.y}, ${pose.z});`;
 const presetCommandButtons = DEFAULT_PROFILE.approvedPoses.map((pose) => {
   const command = presetCommand(pose);
-  return `<button class="copy-command preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}">
+  return `<button class="copy-command preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}" aria-label="Copy ${command}" title="Copy ${command}">
     <span class="preset-name">${pose.name}</span>
     <code>${command}</code>
   </button>`;
@@ -53,10 +53,7 @@ app.innerHTML = `
       <section class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-heading">
           <div><p class="eyebrow">Arduino sketch</p><h2 id="editor-title">Dance code</h2></div>
-          <div class="editor-heading-actions">
-            <span id="editor-state" class="editor-state">Ready</span>
-            <button id="reset-code" class="reset-code-button" type="button">Reset code</button>
-          </div>
+          <button id="reset-code" class="reset-code-button" type="button">Reset code</button>
         </div>
         <div id="editor-message" class="editor-message success" role="status">Instructor dance is ready to preview.</div>
         <div class="editor-wrap">
@@ -66,8 +63,9 @@ app.innerHTML = `
             <textarea id="code-editor" aria-label="Arduino dance code" wrap="off" spellcheck="false"></textarea>
           </div>
         </div>
-        <div class="editor-footer"><span>Ctrl + Enter to preview</span><span id="code-count">0 lines</span></div>
       </section>
+
+      <div id="resize-editor" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize code editor panel" title="Drag to resize the code editor" tabindex="0"></div>
 
       <section class="stage" aria-label="Interactive 3D MeArm viewer">
         <div id="scene" class="scene"></div>
@@ -106,89 +104,105 @@ app.innerHTML = `
             <label class="viewport-toggle" title="Show or hide the scene axes"><input id="toggle-axes" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12V4m0 8h8M4 12l5-5" /></svg><span>Axes</span></label>
           </div>
         </div>
-        <div class="viewport-statusbar">
-          <div class="viewport-camera-state"><strong id="camera-view">Isometric view</strong><span>Robot pose <span id="pose-name">HOME</span></span></div>
-          <div class="viewport-guidance">Drag to orbit · Scroll to zoom</div>
-          <div class="axis-key" aria-label="Axis colors: X red, Y green, Z blue" title="Axis colors: X red, Y green, Z blue"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div>
-        </div>
       </section>
 
+      <div id="resize-inspector" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize inspector panel" title="Drag to resize the inspector" tabindex="0"></div>
+
       <aside class="inspector" aria-label="Motion inspector">
-        <header class="inspector-head"><div><p class="eyebrow">Now running</p><h2 id="dance-title">Instructor dance</h2></div><span id="status" class="status valid" role="status" aria-live="polite"><span aria-hidden="true"></span>Valid</span></header>
-        <section class="inspector-section command-section readout" aria-labelledby="command-title">
-          <div class="section-heading-row">
-            <h3 id="command-title" class="section-label">Current command</h3>
+        <header class="inspector-head"><p class="eyebrow">Now running</p><h2 id="dance-title">Instructor dance</h2></header>
+        <details class="inspector-section command-section readout" open>
+          <summary><span id="command-title" class="section-label">Current command</span></summary>
+          <div class="section-body">
             <button id="source-line" class="source-link" type="button">Line 1</button>
+            <code id="command">arm.moveToXYZ(0, 100, 50);</code>
           </div>
-          <code id="command">arm.moveToXYZ(0, 100, 50);</code>
-        </section>
-        <section class="inspector-section position-section" aria-labelledby="position-title">
-          <h3 id="position-title" class="section-label">Claw position</h3>
-          <dl class="engineering-values" aria-label="Claw coordinates">
-            <div><dt class="axis-x">X</dt><dd><strong id="x-value">0.0</strong><span class="value-unit">mm</span></dd></div>
-            <div><dt class="axis-y">Y</dt><dd><strong id="y-value">100.0</strong><span class="value-unit">mm</span></dd></div>
-            <div><dt class="axis-z">Z</dt><dd><strong id="z-value">50.0</strong><span class="value-unit">mm</span></dd></div>
-          </dl>
-        </section>
-        <section class="inspector-section joints-section" aria-labelledby="joints-title">
-          <h3 id="joints-title" class="section-label">Joint angles</h3>
-          <dl class="engineering-values" aria-label="Joint angles">
-            <div><dt>Base</dt><dd><strong id="base-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-            <div><dt>Shoulder</dt><dd><strong id="shoulder-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-            <div><dt>Elbow</dt><dd><strong id="elbow-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-          </dl>
-        </section>
+        </details>
+        <details class="inspector-section position-section" open>
+          <summary><span id="position-title" class="section-label">Claw position</span></summary>
+          <div class="section-body">
+            <dl class="engineering-values" aria-label="Claw coordinates">
+              <div><dt class="axis-x">X</dt><dd><strong id="x-value">0.0</strong><span class="value-unit">mm</span></dd></div>
+              <div><dt class="axis-y">Y</dt><dd><strong id="y-value">100.0</strong><span class="value-unit">mm</span></dd></div>
+              <div><dt class="axis-z">Z</dt><dd><strong id="z-value">50.0</strong><span class="value-unit">mm</span></dd></div>
+            </dl>
+          </div>
+        </details>
+        <details class="inspector-section joints-section" open>
+          <summary><span id="joints-title" class="section-label">Joint angles</span></summary>
+          <div class="section-body">
+            <dl class="engineering-values" aria-label="Joint angles">
+              <div><dt>Base</dt><dd><strong id="base-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+              <div><dt>Shoulder</dt><dd><strong id="shoulder-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+              <div><dt>Elbow</dt><dd><strong id="elbow-angle">0.0</strong><span class="value-unit">°</span></dd></div>
+            </dl>
+          </div>
+        </details>
         <section class="inspector-section transport playback-section" aria-labelledby="playback-title">
-          <h3 id="playback-title" class="section-label">Playback controls</h3>
-          <div class="transport-buttons">
-            <button id="previous-command" class="square-button" type="button" aria-label="Previous command">Back</button>
-            <button id="restart" class="square-button" type="button">Restart</button>
-            <button id="play" class="primary-button" type="button" aria-pressed="false">Play</button>
-            <button id="next-command" class="square-button" type="button" aria-label="Next command">Next</button>
-          </div>
-        </section>
-        <section class="inspector-section options-section" aria-labelledby="options-title">
-          <h3 id="options-title" class="section-label">Playback settings</h3>
-          <div class="play-options">
-            <label>Speed <select id="speed" aria-label="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
-            <label><input id="repeat" type="checkbox" /> Repeat loop</label>
+          <h3 id="playback-title" class="section-label">Playback</h3>
+          <div class="transport-buttons" role="group" aria-label="Playback transport">
+            <button id="previous-command" class="transport-button" type="button" aria-label="Previous command" title="Previous command"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 3.4v9.2" /><path class="icon-solid" d="M12.2 3.9v8.2L6.4 8l5.8-4.1Z" /></svg></button>
+            <button id="restart" class="transport-button" type="button" aria-label="Restart" title="Restart"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6A5.2 5.2 0 1 1 3 10.3M3.2 6V2.7M3.2 6h3.3" /></svg></button>
+            <button id="play" class="transport-button transport-play" type="button" aria-pressed="false" aria-label="Play" title="Play (Space)">
+              <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path class="icon-solid" d="M5.2 3.2v9.6L12.8 8 5.2 3.2Z" /></svg>
+              <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.6 3.4v9.2M10.4 3.4v9.2" /></svg>
+            </button>
+            <button id="next-command" class="transport-button" type="button" aria-label="Next command" title="Next command"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.8 3.4v9.2" /><path class="icon-solid" d="M3.8 3.9v8.2L9.6 8 3.8 3.9Z" /></svg></button>
+            <select id="speed" aria-label="Playback speed" title="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+            <label class="repeat-toggle" title="Repeat the dance loop"><input id="repeat" type="checkbox" /><span>Repeat</span></label>
           </div>
         </section>
         <section class="inspector-section timeline-section" aria-labelledby="timeline-title">
           <h3 id="timeline-title" class="section-label">Execution timeline</h3>
-          <input id="timeline" class="timeline" type="range" min="0" step="1" value="0" aria-label="Dance timeline" />
+          <div class="timeline-track">
+            <input id="timeline" class="timeline" type="range" min="0" step="1" value="0" aria-label="Dance timeline" />
+            <div id="timeline-ticks" class="timeline-ticks" aria-hidden="true"></div>
+          </div>
           <div class="time-row">
             <span><small>Elapsed</small><strong id="current-time">0:00.0</strong></span>
             <span><small>Total</small><strong id="duration">0:00.0</strong></span>
           </div>
         </section>
-        <section class="inspector-section presets-section" aria-labelledby="presets-title">
-          <div class="section-heading-row">
-            <h3 id="presets-title" class="section-label">Preset commands</h3>
-            <span id="preset-copy-status" class="preset-copy-status" role="status" aria-live="polite">Click to copy</span>
-          </div>
-          <div class="preset-list" aria-label="Approved pose commands">
-            ${presetCommandButtons}
-          </div>
-          <div class="delay-command-group">
-            <span class="delay-command-label">Delay</span>
-            <div class="delay-command-row" aria-label="Delay commands">
-              ${delayCommandButtons}
+        <details class="inspector-section presets-section" open>
+          <summary><span id="presets-title" class="section-label">Preset commands</span><span id="preset-copy-status" class="preset-copy-status" role="status" aria-live="polite">Click to copy</span></summary>
+          <div class="section-body">
+            <div class="preset-list" aria-label="Approved pose commands">
+              ${presetCommandButtons}
+            </div>
+            <div class="delay-command-group">
+              <span class="delay-command-label">Delay</span>
+              <div class="delay-command-row" aria-label="Delay commands">
+                ${delayCommandButtons}
+              </div>
+            </div>
+            <div class="claw-command-group">
+              <span class="claw-command-label">Claw</span>
+              <div class="claw-command-row" aria-label="Claw commands">
+                ${clawCommandButtons}
+              </div>
             </div>
           </div>
-          <div class="claw-command-group">
-            <span class="claw-command-label">Claw</span>
-            <div class="claw-command-row" aria-label="Claw commands">
-              ${clawCommandButtons}
-            </div>
-          </div>
-        </section>
+        </details>
         <section class="inspector-section safety-section" aria-labelledby="safety-title">
           <h3 id="safety-title" class="section-label">Physical-robot safety</h3>
           <p class="safety-note"><strong>Preview only.</strong> Confirm calibration, power, clearance, and each pose on the physical arm.</p>
         </section>
       </aside>
     </main>
+
+    <footer class="statusbar" aria-label="Workspace status">
+      <div class="statusbar-group">
+        <span id="status" class="status valid" role="status" aria-live="polite"><span aria-hidden="true"></span>Valid</span>
+        <span id="editor-state" class="statusbar-item">Ready</span>
+        <span id="statusbar-message" class="statusbar-item statusbar-message success" aria-hidden="true">Instructor dance is ready to preview.</span>
+      </div>
+      <div class="statusbar-group">
+        <span class="statusbar-item">Pose <span id="pose-name">HOME</span></span>
+        <span id="camera-view" class="statusbar-item">Isometric view</span>
+        <span id="code-count" class="statusbar-item">0 lines</span>
+        <span class="statusbar-item statusbar-hint">Ctrl + Enter previews · Drag to orbit · Scroll to zoom</span>
+        <span class="axis-key" aria-label="Axis colors: X red, Y green, Z blue" title="Axis colors: X red, Y green, Z blue"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></span>
+      </div>
+    </footer>
   </div>
 
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
@@ -287,6 +301,7 @@ function compileCurrent(profile = activeProfile): boolean {
   currentTime = 0;
   range.max = String(Math.max(1, activeTimeline.loopDurationMs));
   renderCommandMarkers();
+  renderTimelineTicks();
   get("duration").textContent = formatTime(activeTimeline.loopDurationMs);
   dirty = false;
   get("editor-state").textContent = "Preview current";
@@ -371,9 +386,13 @@ function setStatus(kind: "valid" | "caution" | "invalid", label: string): void {
 }
 
 function showEditorMessage(kind: "success" | "warning" | "error", message: string, line?: number): void {
+  const text = line ? `Line ${line}: ${message}` : message;
   const element = get("editor-message");
   element.className = `editor-message ${kind}`;
-  element.textContent = line ? `Line ${line}: ${message}` : message;
+  element.textContent = text;
+  const summary = get("statusbar-message");
+  summary.className = `statusbar-item statusbar-message ${kind}`;
+  summary.textContent = text;
 }
 
 function updateGutter(): void {
@@ -407,13 +426,28 @@ function syncEditorScroll(): void {
   highlightOutput.scrollTop = editor.scrollTop;
   highlightOutput.scrollLeft = editor.scrollLeft;
 }
-function syncPlayButton(): void { playButton.textContent = playing ? "Pause" : "Play"; playButton.setAttribute("aria-pressed", String(playing)); }
+function syncPlayButton(): void {
+  playButton.classList.toggle("playing", playing);
+  playButton.setAttribute("aria-pressed", String(playing));
+  playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+  playButton.title = playing ? "Pause (Space)" : "Play (Space)";
+}
 function setPlaybackEnabled(enabled: boolean): void {
   for (const id of ["play", "restart", "previous-command", "next-command", "timeline"]) {
     (get(id) as HTMLButtonElement | HTMLInputElement).disabled = !enabled;
   }
 }
 function formatTime(milliseconds: number): string { const seconds = milliseconds / 1000; return `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, "0")}`; }
+
+function renderTimelineTicks(): void {
+  const ticks = get("timeline-ticks");
+  const duration = activeTimeline.loopDurationMs;
+  if (duration <= 0) { ticks.innerHTML = ""; return; }
+  ticks.innerHTML = activeTimeline.loop
+    .filter((segment) => segment.command.type === "move" || segment.command.type === "snap")
+    .map((segment) => `<span style="left:${((segment.endMs / duration) * 100).toFixed(2)}%"></span>`)
+    .join("");
+}
 
 function renderCommandMarkers(): void {
   const commandIndicesByLine = new Map<number, number[]>();
@@ -496,6 +530,45 @@ function stepCommand(direction: -1 | 1): void {
   updateFrame();
 }
 
+function setupPanelResizer(handleId: "resize-editor" | "resize-inspector"): void {
+  const handle = get(handleId);
+  const workspace = document.querySelector<HTMLElement>(".workspace");
+  const panel = document.querySelector<HTMLElement>(handleId === "resize-editor" ? ".editor-panel" : ".inspector");
+  if (!workspace || !panel) return;
+  const property = handleId === "resize-editor" ? "--editor-col" : "--inspector-col";
+  const minWidth = 260;
+  const maxWidth = handleId === "resize-editor" ? 540 : 460;
+  const applyWidth = (width: number): void => {
+    workspace.style.setProperty(property, `${Math.round(Math.min(maxWidth, Math.max(minWidth, width)))}px`);
+  };
+
+  handle.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    handle.setPointerCapture(event.pointerId);
+    handle.classList.add("resizing");
+    const onMove = (moveEvent: PointerEvent): void => {
+      const bounds = workspace.getBoundingClientRect();
+      applyWidth(handleId === "resize-editor" ? moveEvent.clientX - bounds.left : bounds.right - moveEvent.clientX);
+    };
+    const onStop = (): void => {
+      handle.classList.remove("resizing");
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onStop);
+      handle.removeEventListener("pointercancel", onStop);
+    };
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onStop);
+    handle.addEventListener("pointercancel", onStop);
+  });
+
+  handle.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const grow = (event.key === "ArrowRight") === (handleId === "resize-editor") ? 1 : -1;
+    applyWidth(panel.getBoundingClientRect().width + grow * 16);
+  });
+}
+
 const settingIds: Record<keyof ProfileValues, string> = {
   l1: "setting-l1", l2: "setting-l2", l3: "setting-l3", homeX: "setting-home-x", homeY: "setting-home-y", homeZ: "setting-home-z",
   baseMin: "setting-base-min", baseMax: "setting-base-max", shoulderMin: "setting-shoulder-min", shoulderMax: "setting-shoulder-max", elbowMin: "setting-elbow-min", elbowMax: "setting-elbow-max",
@@ -553,6 +626,9 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault(); playing = !playing; syncPlayButton();
   }
 });
+
+setupPanelResizer("resize-editor");
+setupPanelResizer("resize-inspector");
 
 loadSample("instructor");
 syncPlayButton();
