@@ -29,11 +29,17 @@ from the source kinematics even when the upper links were correct.
 ## Visual geometry
 
 The arm is a lightweight assembly-inspired model rather than a CAD replica. Its
-visual construction follows the MeArm v4.1 assembly language: layered flat
-plates with dark cut edges, rectangular servo housings, paired structural
-links, exposed pivot fasteners, parallel linkages, and a geared two-jaw-style
-gripper. These details are built from procedural Three.js geometry, so the
+visual construction follows the MeArm v4.1 assembly language and supplied A5
+cut-profile SVG: layered wooden plates with dark cut edges, real through-holes
+and servo openings, rectangular servo housings, paired structural links,
+exposed pivot fasteners, parallel linkages, and a geared two-jaw-style gripper.
+The measured 55.12 mm Part 17 pivot span is used for the secondary linkages.
+These details are built from controlled procedural Three.js geometry, so the
 model remains fast, profile-driven, and independent of external assets.
+
+The SVG affects silhouette and hole placement only. The viewer intentionally
+keeps its warm wood and dark edge materials; it does not attempt to reproduce
+transparent acrylic. The source SVG is not embedded or interpreted at runtime.
 
 The added components are visual only. The mathematical shoulder, elbow, wrist,
 and endpoint pivots remain the authoritative transform hierarchy, and the
@@ -43,9 +49,11 @@ dimensions or collision accuracy.
 
 The model includes:
 
-- layered base, pivot plate, standoffs, and rotating arm frame,
+- layered base, pivot plate, standoffs, mounting holes, servo cutouts, and
+  rotating arm frame,
 - visible base, shoulder, elbow, and claw servo housings,
-- paired upper-arm and forearm plates with secondary parallel linkages,
+- profiled upper-arm and forearm plates with pivot holes, cross webs, servo
+  horns, and measured secondary parallel linkages,
 - exposed shoulder, elbow, and wrist pivots and fasteners,
 - horizontal wrist plate and two animated, toothed claw fingers,
 - glowing target marker,
@@ -56,6 +64,13 @@ The model includes:
 
 The scene also provides orbit/zoom, fit/reset, and Isometric, Front, Back,
 Left, Right, and Top camera views.
+
+The fixed base-servo body is recessed below the fixed pivot plate. Only its
+vertical drive hub enters the yaw axis, and the rotating deck has a separate
+vertical layer. The rotating deck is an open cross-frame with side bays for the
+horizontal shoulder and elbow servo bodies, rather than a solid plate passing
+through them. Together, these clearances prevent the fixed and rotating base
+geometry from clipping across the configured base-angle range.
 
 ## Task-space boundary
 

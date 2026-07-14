@@ -4,8 +4,8 @@ import type { JointAngles, Point3, RobotProfile } from "../core/types";
 export type ViewerStatus = "valid" | "caution" | "invalid";
 
 const COLORS = {
-  acrylic: 0xc99a61,
-  acrylicEdge: 0x5f4028,
+  wood: 0xc99a61,
+  woodEdge: 0x5f4028,
   servo: 0x252a2e,
   servoLabel: 0xb23a48,
   joint: 0x343b40,
@@ -17,6 +17,16 @@ const COLORS = {
   invalid: 0xff5f6d,
 };
 
+const V41_VISUAL_DIMENSIONS = Object.freeze({
+  plateThickness: 3.2,
+  principalPlateWidth: 11.5,
+  principalPivotHoleRadius: 2.15,
+  principalIntermediatePivot: 24.11,
+  parallelLinkPivotSpan: 55.12,
+  parallelLinkWidth: 5.6,
+  parallelLinkHoleRadius: 1.65,
+});
+
 function mesh(geometry: THREE.BufferGeometry, material: THREE.Material): THREE.Mesh {
   const result = new THREE.Mesh(geometry, material);
   result.castShadow = true;
@@ -24,12 +34,7 @@ function mesh(geometry: THREE.BufferGeometry, material: THREE.Material): THREE.M
   return result;
 }
 
-function roundedRectangleGeometry(
-  width: number,
-  height: number,
-  depth: number,
-  radius: number,
-): THREE.ExtrudeGeometry {
+function roundedRectangleShape(width: number, height: number, radius: number): THREE.Shape {
   const halfWidth = width / 2;
   const halfHeight = height / 2;
   const corner = Math.min(radius, halfWidth, halfHeight);
@@ -43,14 +48,40 @@ function roundedRectangleGeometry(
   shape.quadraticCurveTo(-halfWidth, halfHeight, -halfWidth, halfHeight - corner);
   shape.lineTo(-halfWidth, -halfHeight + corner);
   shape.quadraticCurveTo(-halfWidth, -halfHeight, -halfWidth + corner, -halfHeight);
+  shape.closePath();
+  return shape;
+}
 
-  const geometry = new THREE.ExtrudeGeometry(shape, {
+function addCircularHole(shape: THREE.Shape, x: number, y: number, radius: number): void {
+  const hole = new THREE.Path();
+  hole.absarc(x, y, radius, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+}
+
+function addRectangularHole(
+  shape: THREE.Shape,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  const hole = new THREE.Path();
+  hole.moveTo(x - halfWidth, y - halfHeight);
+  hole.lineTo(x - halfWidth, y + halfHeight);
+  hole.lineTo(x + halfWidth, y + halfHeight);
+  hole.lineTo(x + halfWidth, y - halfHeight);
+  hole.closePath();
+  shape.holes.push(hole);
+}
+
+function extrudedShapeGeometry(shape: THREE.Shape, depth: number): THREE.ExtrudeGeometry {
+  return new THREE.ExtrudeGeometry(shape, {
     depth,
     bevelEnabled: false,
-    curveSegments: 8,
+    curveSegments: 12,
   });
-  geometry.center();
-  return geometry;
 }
 
 function gearGeometry(radius: number, teeth: number, thickness: number): THREE.ExtrudeGeometry {
@@ -91,16 +122,16 @@ export class MeArmModel extends THREE.Group {
   constructor(profile: RobotProfile) {
     super();
 
-    const acrylic = new THREE.MeshStandardMaterial({ color: COLORS.acrylic, roughness: 0.58, metalness: 0.02 });
-    const acrylicEdge = new THREE.MeshStandardMaterial({ color: COLORS.acrylicEdge, roughness: 0.72 });
+    const wood = new THREE.MeshStandardMaterial({ color: COLORS.wood, roughness: 0.58, metalness: 0.02 });
+    const woodEdge = new THREE.MeshStandardMaterial({ color: COLORS.woodEdge, roughness: 0.72 });
     const servo = new THREE.MeshStandardMaterial({ color: COLORS.servo, roughness: 0.5, metalness: 0.06 });
     const servoLabel = new THREE.MeshStandardMaterial({ color: COLORS.servoLabel, roughness: 0.62 });
     const joint = new THREE.MeshStandardMaterial({ color: COLORS.joint, roughness: 0.42, metalness: 0.12 });
     const metal = new THREE.MeshStandardMaterial({ color: COLORS.metal, roughness: 0.28, metalness: 0.72 });
     const claw = new THREE.MeshStandardMaterial({ color: COLORS.claw, roughness: 0.55, metalness: 0.02 });
-    this.frameMaterials.push(acrylic, acrylicEdge, servo, servoLabel, joint, metal, claw);
+    this.frameMaterials.push(wood, woodEdge, servo, servoLabel, joint, metal, claw);
 
-    const basePlate = this.makeHorizontalPlate(98, 82, 4, 6, acrylic, acrylicEdge);
+    const basePlate = this.makeMountingPlate(98, 82, 4, true, wood, woodEdge);
     basePlate.name = "base-plate";
     basePlate.position.y = 2.2;
     this.add(basePlate);
@@ -111,13 +142,12 @@ export class MeArmModel extends THREE.Group {
       this.add(foot);
     }
 
-    const baseServo = this.makeServo(27, 34, 35, servo, servoLabel, metal);
+    const baseServo = this.makeBaseServo(27, 22, 35, servo, servoLabel, metal);
     baseServo.name = "base-servo";
-    baseServo.rotation.z = -Math.PI / 2;
-    baseServo.position.set(0, 13.5, -2);
+    baseServo.position.set(0, 17, 0);
     this.add(baseServo);
 
-    const pivotPlate = this.makeHorizontalPlate(52, 46, 3.6, 4, acrylic, acrylicEdge);
+    const pivotPlate = this.makeMountingPlate(52, 46, 3.6, false, wood, woodEdge);
     pivotPlate.name = "pivot-servo-plate";
     pivotPlate.position.y = 17.5;
     this.add(pivotPlate);
@@ -132,23 +162,22 @@ export class MeArmModel extends THREE.Group {
     this.basePivot.name = "rotating-arm-assembly";
     this.add(this.basePivot);
 
-    const rotatingDeck = this.makeHorizontalPlate(54, 48, 3.6, 4, acrylic, acrylicEdge);
-    rotatingDeck.position.y = -8.8;
+    const rotatingDeck = this.makeRotatingDeck(54, 48, 3.6, wood, woodEdge);
+    rotatingDeck.name = "rotating-deck";
+    // Keep the rotating deck above the fixed pivot plate. The previous layers
+    // overlapped, which made their edges clip through each other during yaw.
+    rotatingDeck.position.y = -6;
     this.basePivot.add(rotatingDeck);
 
     for (const x of [-18, 18]) {
-      const sidePlate = this.makeVerticalSidePlate(40, 43, 3.4, 4, acrylic, acrylicEdge);
+      const sidePlate = this.makeServoSidePlate(40, 43, 3.4, wood, woodEdge);
       sidePlate.name = x < 0 ? "left-arm-servo-plate" : "right-arm-servo-plate";
       sidePlate.position.set(x, -7, 0);
       this.basePivot.add(sidePlate);
-
-      const plateWindow = mesh(new THREE.BoxGeometry(0.55, 15, 20), servo);
-      plateWindow.position.set(x + Math.sign(x) * 2, -8, 0);
-      this.basePivot.add(plateWindow);
     }
 
     for (const z of [-17, 17]) {
-      const crossMember = mesh(new THREE.BoxGeometry(39, 5, 3.2), acrylicEdge);
+      const crossMember = mesh(new THREE.BoxGeometry(39, 5, 3.2), woodEdge);
       crossMember.position.set(0, -21, z);
       this.basePivot.add(crossMember);
     }
@@ -167,16 +196,23 @@ export class MeArmModel extends THREE.Group {
     this.basePivot.add(this.shoulderPivot);
     this.shoulderPivot.name = "shoulder-pivot";
     this.shoulderPivot.add(this.makeJoint(joint, metal, 9.5, 43));
-    const upperLink = this.makeLink(profile.links.l1, acrylic, acrylicEdge, metal);
+    const upperLink = this.makeLink(profile.links.l1, wood, woodEdge, metal);
     upperLink.name = "upper-link";
     this.shoulderPivot.add(upperLink);
 
-    const shoulderLinkage = this.makeLayeredCapsuleRail(
-      profile.links.l1 * 0.82,
-      7,
+    const shoulderHorn = this.makeServoHorn(15, wood, woodEdge, metal);
+    shoulderHorn.name = "shoulder-servo-horn";
+    shoulderHorn.position.x = -22;
+    this.shoulderPivot.add(shoulderHorn);
+
+    const shoulderLinkage = this.makeProfiledRail(
+      V41_VISUAL_DIMENSIONS.parallelLinkPivotSpan,
+      V41_VISUAL_DIMENSIONS.parallelLinkWidth,
       2.6,
-      acrylic,
-      acrylicEdge,
+      [0, V41_VISUAL_DIMENSIONS.parallelLinkPivotSpan],
+      V41_VISUAL_DIMENSIONS.parallelLinkHoleRadius,
+      wood,
+      woodEdge,
     );
     shoulderLinkage.name = "parallel-linkage";
     shoulderLinkage.position.set(-14.5, 6, 4);
@@ -186,16 +222,23 @@ export class MeArmModel extends THREE.Group {
     this.elbowPivot.name = "elbow-pivot";
     this.shoulderPivot.add(this.elbowPivot);
     this.elbowPivot.add(this.makeJoint(joint, metal, 8.5, 35));
-    const forearmLink = this.makeLink(profile.links.l2, acrylic, acrylicEdge, metal);
+    const forearmLink = this.makeLink(profile.links.l2, wood, woodEdge, metal);
     forearmLink.name = "forearm-link";
     this.elbowPivot.add(forearmLink);
 
-    const forearmLinkage = this.makeLayeredCapsuleRail(
-      profile.links.l2 * 0.88,
-      6.5,
+    const elbowHorn = this.makeServoHorn(14, wood, woodEdge, metal);
+    elbowHorn.name = "elbow-servo-horn";
+    elbowHorn.position.x = 18;
+    this.elbowPivot.add(elbowHorn);
+
+    const forearmLinkage = this.makeProfiledRail(
+      V41_VISUAL_DIMENSIONS.parallelLinkPivotSpan,
+      V41_VISUAL_DIMENSIONS.parallelLinkWidth,
       2.4,
-      acrylic,
-      acrylicEdge,
+      [0, V41_VISUAL_DIMENSIONS.parallelLinkPivotSpan],
+      V41_VISUAL_DIMENSIONS.parallelLinkHoleRadius,
+      wood,
+      woodEdge,
     );
     forearmLinkage.name = "forearm-parallel-linkage";
     forearmLinkage.position.set(14.5, -5.5, 3);
@@ -207,7 +250,7 @@ export class MeArmModel extends THREE.Group {
     this.wrist.add(this.makeJoint(joint, metal, 7.2, 31));
 
     const handLength = Math.max(profile.links.l3, 8);
-    const hand = this.makeHorizontalPlate(31, handLength, 3.2, 3, acrylic, acrylicEdge);
+    const hand = this.makeWristPlate(31, handLength, 3.2, wood, woodEdge);
     hand.name = "wrist-link";
     hand.position.z = profile.links.l3 / 2;
     this.wrist.add(hand);
@@ -222,7 +265,7 @@ export class MeArmModel extends THREE.Group {
     this.endpoint.name = "kinematic-endpoint";
     this.wrist.add(this.endpoint);
 
-    const palm = this.makeHorizontalPlate(34, 15, 3.6, 3, claw, acrylicEdge);
+    const palm = this.makeGripperPlate(34, 15, 3.6, claw, woodEdge);
     palm.name = "gripper-plate";
     palm.position.z = 6;
     this.endpoint.add(palm);
@@ -238,8 +281,8 @@ export class MeArmModel extends THREE.Group {
     this.leftFinger.name = "left-gripper-pivot";
     this.rightFinger.name = "right-gripper-pivot";
     this.endpoint.add(this.leftFinger, this.rightFinger);
-    this.leftFinger.add(this.makeFinger(claw, acrylicEdge, metal, "left"));
-    this.rightFinger.add(this.makeFinger(claw, acrylicEdge, metal, "right"));
+    this.leftFinger.add(this.makeFinger(claw, woodEdge, metal, "left"));
+    this.rightFinger.add(this.makeFinger(claw, woodEdge, metal, "right"));
 
     const targetMaterial = new THREE.MeshStandardMaterial({
       color: COLORS.valid,
@@ -307,20 +350,23 @@ export class MeArmModel extends THREE.Group {
     this.pathMaterial.dispose();
   }
 
-  private makeHorizontalPlate(
-    width: number,
-    depth: number,
+  private makeLayeredHorizontalPlate(
+    shapeFactory: () => THREE.Shape,
     thickness: number,
-    radius: number,
     surfaceMaterial: THREE.Material,
     edgeMaterial: THREE.Material,
   ): THREE.Group {
     const group = new THREE.Group();
-    const core = mesh(roundedRectangleGeometry(width, depth, thickness, radius), edgeMaterial);
+    const coreGeometry = extrudedShapeGeometry(shapeFactory(), thickness);
+    coreGeometry.center();
+    const core = mesh(coreGeometry, edgeMaterial);
     core.rotation.x = Math.PI / 2;
     group.add(core);
+
     for (const side of [-1, 1]) {
-      const face = mesh(roundedRectangleGeometry(width - 1.2, depth - 1.2, 0.38, Math.max(0.5, radius - 0.6)), surfaceMaterial);
+      const faceGeometry = extrudedShapeGeometry(shapeFactory(), 0.34);
+      faceGeometry.center();
+      const face = mesh(faceGeometry, surfaceMaterial);
       face.rotation.x = Math.PI / 2;
       face.position.y = side * (thickness / 2 + 0.08);
       group.add(face);
@@ -328,25 +374,147 @@ export class MeArmModel extends THREE.Group {
     return group;
   }
 
-  private makeVerticalSidePlate(
-    depth: number,
-    height: number,
+  private makeLayeredVerticalPlate(
+    shapeFactory: () => THREE.Shape,
     thickness: number,
-    radius: number,
     surfaceMaterial: THREE.Material,
     edgeMaterial: THREE.Material,
   ): THREE.Group {
     const group = new THREE.Group();
-    const core = mesh(roundedRectangleGeometry(depth, height, thickness, radius), edgeMaterial);
+    const coreGeometry = extrudedShapeGeometry(shapeFactory(), thickness);
+    coreGeometry.center();
+    const core = mesh(coreGeometry, edgeMaterial);
     core.rotation.y = Math.PI / 2;
     group.add(core);
+
     for (const side of [-1, 1]) {
-      const face = mesh(roundedRectangleGeometry(depth - 1.2, height - 1.2, 0.38, Math.max(0.5, radius - 0.6)), surfaceMaterial);
+      const faceGeometry = extrudedShapeGeometry(shapeFactory(), 0.34);
+      faceGeometry.center();
+      const face = mesh(faceGeometry, surfaceMaterial);
       face.rotation.y = Math.PI / 2;
       face.position.x = side * (thickness / 2 + 0.08);
       group.add(face);
     }
     return group;
+  }
+
+  private makeMountingPlate(
+    width: number,
+    depth: number,
+    thickness: number,
+    includeServoCutout: boolean,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+  ): THREE.Group {
+    const shapeFactory = (): THREE.Shape => {
+      const shape = roundedRectangleShape(width, depth, Math.min(6, width * 0.1));
+      const x = width / 2 - Math.min(8, width * 0.16);
+      const y = depth / 2 - Math.min(8, depth * 0.16);
+      for (const [holeX, holeY] of [[-x, -y], [x, -y], [-x, y], [x, y]] as const) {
+        addCircularHole(shape, holeX, holeY, 2.1);
+      }
+      if (includeServoCutout) {
+        addRectangularHole(shape, 0, 0, Math.min(30, width * 0.42), Math.min(40, depth * 0.54));
+        addRectangularHole(shape, -width * 0.32, 0, 8, 3.1);
+        addRectangularHole(shape, width * 0.32, 0, 8, 3.1);
+      } else {
+        addCircularHole(shape, 0, 0, 6.2);
+      }
+      return shape;
+    };
+    return this.makeLayeredHorizontalPlate(shapeFactory, thickness, surfaceMaterial, edgeMaterial);
+  }
+
+  private makeServoSidePlate(
+    depth: number,
+    height: number,
+    thickness: number,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+  ): THREE.Group {
+    const shapeFactory = (): THREE.Shape => {
+      const shape = roundedRectangleShape(depth, height, 4);
+      const x = depth / 2 - 5.2;
+      const y = height / 2 - 5.2;
+      for (const [holeX, holeY] of [[-x, -y], [x, -y], [-x, y], [x, y]] as const) {
+        addCircularHole(shape, holeX, holeY, 1.7);
+      }
+      addRectangularHole(shape, 0, 0, Math.min(22, depth - 12), Math.min(29, height - 12));
+      return shape;
+    };
+    return this.makeLayeredVerticalPlate(shapeFactory, thickness, surfaceMaterial, edgeMaterial);
+  }
+
+  private makeRotatingDeck(
+    width: number,
+    depth: number,
+    thickness: number,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+  ): THREE.Group {
+    const halfWidth = width / 2;
+    const halfDepth = depth / 2;
+    const spineHalfWidth = 14;
+    const servoBayHalfDepth = 17.5;
+    const shapeFactory = (): THREE.Shape => {
+      // The v4.1 base is an open cross-frame. Its side bays clear the two
+      // horizontal shoulder/elbow servo bodies while the front and rear rails
+      // still connect the paired upright plates.
+      const shape = new THREE.Shape();
+      shape.moveTo(-halfWidth, -halfDepth);
+      shape.lineTo(halfWidth, -halfDepth);
+      shape.lineTo(halfWidth, -servoBayHalfDepth);
+      shape.lineTo(spineHalfWidth, -servoBayHalfDepth);
+      shape.lineTo(spineHalfWidth, servoBayHalfDepth);
+      shape.lineTo(halfWidth, servoBayHalfDepth);
+      shape.lineTo(halfWidth, halfDepth);
+      shape.lineTo(-halfWidth, halfDepth);
+      shape.lineTo(-halfWidth, servoBayHalfDepth);
+      shape.lineTo(-spineHalfWidth, servoBayHalfDepth);
+      shape.lineTo(-spineHalfWidth, -servoBayHalfDepth);
+      shape.lineTo(-halfWidth, -servoBayHalfDepth);
+      shape.closePath();
+      addCircularHole(shape, 0, 0, 6.2);
+      return shape;
+    };
+    const deck = this.makeLayeredHorizontalPlate(shapeFactory, thickness, surfaceMaterial, edgeMaterial);
+    deck.children[0]!.name = "rotating-deck-core";
+    return deck;
+  }
+
+  private makeWristPlate(
+    width: number,
+    depth: number,
+    thickness: number,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+  ): THREE.Group {
+    const shapeFactory = (): THREE.Shape => {
+      const shape = roundedRectangleShape(width, depth, 3.2);
+      const y = Math.max(0, depth / 2 - 4.2);
+      for (const [holeX, holeY] of [[-10.5, -y], [10.5, -y], [-10.5, y], [10.5, y]] as const) {
+        addCircularHole(shape, holeX, holeY, 1.45);
+      }
+      addRectangularHole(shape, 0, 0, Math.min(10, width * 0.35), Math.min(7, depth * 0.32));
+      return shape;
+    };
+    return this.makeLayeredHorizontalPlate(shapeFactory, thickness, surfaceMaterial, edgeMaterial);
+  }
+
+  private makeGripperPlate(
+    width: number,
+    depth: number,
+    thickness: number,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+  ): THREE.Group {
+    const shapeFactory = (): THREE.Shape => {
+      const shape = roundedRectangleShape(width, depth, 3);
+      for (const x of [-11, 11]) addCircularHole(shape, x, 0, 2.25);
+      addRectangularHole(shape, 0, 0, 6.5, 4.2);
+      return shape;
+    };
+    return this.makeLayeredHorizontalPlate(shapeFactory, thickness, surfaceMaterial, edgeMaterial);
   }
 
   private makeLink(
@@ -357,10 +525,27 @@ export class MeArmModel extends THREE.Group {
   ): THREE.Group {
     const group = new THREE.Group();
     for (const x of [-9, 9]) {
-      const rail = this.makeLayeredCapsuleRail(length, 11, 3.2, surfaceMaterial, edgeMaterial);
+      const holes = x < 0
+        ? [0, Math.min(V41_VISUAL_DIMENSIONS.principalIntermediatePivot, length * 0.4), length]
+        : [0, length];
+      const rail = this.makeProfiledRail(
+        length,
+        V41_VISUAL_DIMENSIONS.principalPlateWidth,
+        V41_VISUAL_DIMENSIONS.plateThickness,
+        holes,
+        V41_VISUAL_DIMENSIONS.principalPivotHoleRadius,
+        surfaceMaterial,
+        edgeMaterial,
+      );
       rail.position.x = x;
       group.add(rail);
     }
+
+    const crossWeb = mesh(new THREE.BoxGeometry(22, 9, 3.2), edgeMaterial);
+    crossWeb.name = "main-arm-cross-web";
+    crossWeb.position.set(0, 0, length * 0.52);
+    group.add(crossWeb);
+
     for (const amount of [0.32, 0.68]) {
       const spacer = mesh(new THREE.CylinderGeometry(2.1, 2.1, 22, 12), metalMaterial);
       spacer.rotation.z = Math.PI / 2;
@@ -370,42 +555,71 @@ export class MeArmModel extends THREE.Group {
     return group;
   }
 
-  private makeLayeredCapsuleRail(
+  private makeProfiledRail(
     length: number,
     width: number,
     thickness: number,
+    holePositions: number[],
+    holeRadius: number,
     surfaceMaterial: THREE.Material,
     edgeMaterial: THREE.Material,
   ): THREE.Group {
+    const startRadius = Math.max(width * 0.82, holeRadius + 1.8);
+    const endRadius = Math.max(width * 0.66, holeRadius + 1.8);
+    const halfWidth = width / 2;
+    const shapeFactory = (): THREE.Shape => {
+      const shape = new THREE.Shape();
+      shape.moveTo(0, -startRadius);
+      shape.quadraticCurveTo(-startRadius, -startRadius, -startRadius, 0);
+      shape.quadraticCurveTo(-startRadius, startRadius, 0, startRadius);
+      shape.quadraticCurveTo(startRadius * 0.75, startRadius, startRadius * 1.35, halfWidth);
+      shape.lineTo(length - endRadius * 1.35, halfWidth);
+      shape.quadraticCurveTo(length - endRadius * 0.75, endRadius, length, endRadius);
+      shape.quadraticCurveTo(length + endRadius, endRadius, length + endRadius, 0);
+      shape.quadraticCurveTo(length + endRadius, -endRadius, length, -endRadius);
+      shape.quadraticCurveTo(length - endRadius * 0.75, -endRadius, length - endRadius * 1.35, -halfWidth);
+      shape.lineTo(startRadius * 1.35, -halfWidth);
+      shape.quadraticCurveTo(startRadius * 0.75, -startRadius, 0, -startRadius);
+      shape.closePath();
+      for (const position of holePositions) addCircularHole(shape, position, 0, holeRadius);
+      return shape;
+    };
+
     const group = new THREE.Group();
-    group.add(this.makeCapsuleRail(length, width, thickness, edgeMaterial));
+    const coreGeometry = extrudedShapeGeometry(shapeFactory(), thickness);
+    coreGeometry.translate(0, 0, -thickness / 2);
+    const core = mesh(coreGeometry, edgeMaterial);
+    core.rotation.y = -Math.PI / 2;
+    group.add(core);
+
     for (const side of [-1, 1]) {
-      const face = this.makeCapsuleRail(length, width - 1.2, 0.36, surfaceMaterial);
+      const faceGeometry = extrudedShapeGeometry(shapeFactory(), 0.34);
+      faceGeometry.translate(0, 0, -0.17);
+      const face = mesh(faceGeometry, surfaceMaterial);
+      face.rotation.y = -Math.PI / 2;
       face.position.x = side * (thickness / 2 + 0.08);
       group.add(face);
     }
     return group;
   }
 
-  private makeCapsuleRail(
+  private makeServoHorn(
     length: number,
-    width: number,
-    thickness: number,
-    material: THREE.Material,
+    surfaceMaterial: THREE.Material,
+    edgeMaterial: THREE.Material,
+    metalMaterial: THREE.Material,
   ): THREE.Group {
     const group = new THREE.Group();
-    const safeLength = Math.max(length, width);
-    const radius = width / 2;
-    const bodyLength = Math.max(0.2, safeLength - width);
-    const body = mesh(new THREE.BoxGeometry(thickness, width, bodyLength), material);
-    body.position.z = safeLength / 2;
-    group.add(body);
-    for (const z of [radius, safeLength - radius]) {
-      const end = mesh(new THREE.CylinderGeometry(radius, radius, thickness, 20), material);
-      end.rotation.z = Math.PI / 2;
-      end.position.z = z;
-      group.add(end);
-    }
+    const splinedDisc = mesh(gearGeometry(5.2, 12, 2.2), surfaceMaterial);
+    splinedDisc.rotation.y = Math.PI / 2;
+    group.add(splinedDisc);
+
+    const horn = this.makeProfiledRail(length, 4.2, 2, [0, length], 1.1, surfaceMaterial, edgeMaterial);
+    group.add(horn);
+
+    const hub = mesh(new THREE.CylinderGeometry(2.3, 2.3, 3, 16), metalMaterial);
+    hub.rotation.z = Math.PI / 2;
+    group.add(hub);
     return group;
   }
 
@@ -491,6 +705,40 @@ export class MeArmModel extends THREE.Group {
     const hub = mesh(new THREE.CylinderGeometry(5, 5, 3.5, 22), metalMaterial);
     hub.rotation.z = Math.PI / 2;
     hub.position.x = width / 2 + 1;
+    group.add(hub);
+    return group;
+  }
+
+  private makeBaseServo(
+    width: number,
+    height: number,
+    depth: number,
+    bodyMaterial: THREE.Material,
+    labelMaterial: THREE.Material,
+    metalMaterial: THREE.Material,
+  ): THREE.Group {
+    const group = new THREE.Group();
+
+    // The base servo is mounted below the fixed plate with a vertical output
+    // shaft. Keeping the body beneath the yaw deck prevents it from entering
+    // the rotating assembly's sweep.
+    const body = mesh(new THREE.BoxGeometry(width, height, depth), bodyMaterial);
+    body.name = "base-servo-body";
+    body.position.y = -height / 2 - 4;
+    group.add(body);
+
+    const flange = mesh(new THREE.BoxGeometry(width + 7, 3.2, depth + 4), bodyMaterial);
+    flange.name = "base-servo-flange";
+    flange.position.y = -3.5;
+    group.add(flange);
+
+    const label = mesh(new THREE.BoxGeometry(width * 0.52, height * 0.48, 0.45), labelMaterial);
+    label.position.set(0, -height * 0.58, depth / 2 + 0.24);
+    group.add(label);
+
+    const hub = mesh(new THREE.CylinderGeometry(5, 5, 4.8, 22), metalMaterial);
+    hub.name = "base-drive-hub";
+    hub.position.y = 1.5;
     group.add(hub);
     return group;
   }
