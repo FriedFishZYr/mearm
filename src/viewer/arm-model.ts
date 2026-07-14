@@ -142,19 +142,19 @@ export class MeArmModel extends THREE.Group {
       this.add(foot);
     }
 
-    const baseServo = this.makeBaseServo(27, 22, 35, servo, servoLabel, metal);
+    const baseServo = this.makeBaseServo(27, 13, 35, servo, servoLabel, metal);
     baseServo.name = "base-servo";
     baseServo.position.set(0, 17, 0);
     this.add(baseServo);
 
     const pivotPlate = this.makeMountingPlate(52, 46, 3.6, false, wood, woodEdge);
     pivotPlate.name = "pivot-servo-plate";
-    pivotPlate.position.y = 17.5;
+    pivotPlate.position.y = 16;
     this.add(pivotPlate);
 
     for (const [x, z] of [[-20, -17], [20, -17], [-20, 17], [20, 17]] as const) {
-      const standoff = mesh(new THREE.CylinderGeometry(1.8, 1.8, 11, 10), metal);
-      standoff.position.set(x, 11, z);
+      const standoff = mesh(new THREE.CylinderGeometry(1.8, 1.8, 12.5, 10), metal);
+      standoff.position.set(x, 10.5, z);
       this.add(standoff);
     }
 
@@ -162,40 +162,44 @@ export class MeArmModel extends THREE.Group {
     this.basePivot.name = "rotating-arm-assembly";
     this.add(this.basePivot);
 
+    // Every rotating part must stay above the fixed pivot plate (top ~18.05)
+    // so the yaw sweep never intersects the static base stack; only the
+    // on-axis drive hub crosses that boundary.
     const rotatingDeck = this.makeRotatingDeck(54, 48, 3.6, wood, woodEdge);
     rotatingDeck.name = "rotating-deck";
-    // Keep the rotating deck above the fixed pivot plate. The previous layers
-    // overlapped, which made their edges clip through each other during yaw.
-    rotatingDeck.position.y = -6;
+    rotatingDeck.position.y = -5;
     this.basePivot.add(rotatingDeck);
 
     for (const x of [-18, 18]) {
-      const sidePlate = this.makeServoSidePlate(40, 43, 3.4, wood, woodEdge);
+      const sidePlate = this.makeServoSidePlate(40, 20, 3.4, wood, woodEdge);
       sidePlate.name = x < 0 ? "left-arm-servo-plate" : "right-arm-servo-plate";
-      sidePlate.position.set(x, -7, 0);
+      sidePlate.position.set(x, 4.5, 0);
       this.basePivot.add(sidePlate);
     }
 
-    for (const z of [-17, 17]) {
+    for (const z of [-19, 19]) {
       const crossMember = mesh(new THREE.BoxGeometry(39, 5, 3.2), woodEdge);
-      crossMember.position.set(0, -21, z);
+      crossMember.name = z < 0 ? "rear-base-rail" : "front-base-rail";
+      crossMember.position.set(0, -1.5, z);
       this.basePivot.add(crossMember);
     }
 
-    const shoulderServo = this.makeServo(26, 25, 33, servo, servoLabel, metal);
+    const shoulderServo = this.makeServo(26, 16, 33, servo, servoLabel, metal);
     shoulderServo.name = "shoulder-servo";
-    shoulderServo.position.set(-28, -6, 0);
+    shoulderServo.position.set(-28, 0, 0);
     this.basePivot.add(shoulderServo);
 
-    const elbowServo = this.makeServo(26, 25, 33, servo, servoLabel, metal);
+    const elbowServo = this.makeServo(26, 16, 33, servo, servoLabel, metal);
     elbowServo.name = "elbow-servo";
     elbowServo.rotation.y = Math.PI;
-    elbowServo.position.set(28, -6, 0);
+    elbowServo.position.set(28, 0, 0);
     this.basePivot.add(elbowServo);
 
     this.basePivot.add(this.shoulderPivot);
     this.shoulderPivot.name = "shoulder-pivot";
-    this.shoulderPivot.add(this.makeJoint(joint, metal, 9.5, 43));
+    const shoulderJoint = this.makeJoint(joint, metal, 9.5, 43);
+    shoulderJoint.name = "shoulder-joint";
+    this.shoulderPivot.add(shoulderJoint);
     const upperLink = this.makeLink(profile.links.l1, wood, woodEdge, metal);
     upperLink.name = "upper-link";
     this.shoulderPivot.add(upperLink);
@@ -720,25 +724,25 @@ export class MeArmModel extends THREE.Group {
     const group = new THREE.Group();
 
     // The base servo is mounted below the fixed plate with a vertical output
-    // shaft. Keeping the body beneath the yaw deck prevents it from entering
-    // the rotating assembly's sweep.
+    // shaft. The body rests in the base-plate cutout above the ground plane,
+    // and only the drive hub rises through the pivot plate into the yaw deck.
     const body = mesh(new THREE.BoxGeometry(width, height, depth), bodyMaterial);
     body.name = "base-servo-body";
-    body.position.y = -height / 2 - 4;
+    body.position.y = -height / 2 - 3.5;
     group.add(body);
 
     const flange = mesh(new THREE.BoxGeometry(width + 7, 3.2, depth + 4), bodyMaterial);
     flange.name = "base-servo-flange";
-    flange.position.y = -3.5;
+    flange.position.y = -5;
     group.add(flange);
 
     const label = mesh(new THREE.BoxGeometry(width * 0.52, height * 0.48, 0.45), labelMaterial);
     label.position.set(0, -height * 0.58, depth / 2 + 0.24);
     group.add(label);
 
-    const hub = mesh(new THREE.CylinderGeometry(5, 5, 4.8, 22), metalMaterial);
+    const hub = mesh(new THREE.CylinderGeometry(5, 5, 7, 22), metalMaterial);
     hub.name = "base-drive-hub";
-    hub.position.y = 1.5;
+    hub.position.y = 2.5;
     group.add(hub);
     return group;
   }

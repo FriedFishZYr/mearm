@@ -65,12 +65,17 @@ The model includes:
 The scene also provides orbit/zoom, fit/reset, and Isometric, Front, Back,
 Left, Right, and Top camera views.
 
-The fixed base-servo body is recessed below the fixed pivot plate. Only its
-vertical drive hub enters the yaw axis, and the rotating deck has a separate
-vertical layer. The rotating deck is an open cross-frame with side bays for the
-horizontal shoulder and elbow servo bodies, rather than a solid plate passing
-through them. Together, these clearances prevent the fixed and rotating base
-geometry from clipping across the configured base-angle range.
+The fixed base-servo body rests in the base-plate cutout above the ground
+plane and below the fixed pivot plate. Only its vertical drive hub crosses the
+yaw axis, rising through the pivot-plate hole into the rotating deck. The
+rotating deck is an open cross-frame with side bays for the horizontal
+shoulder and elbow servo bodies, rather than a solid plate passing through
+them, and the complete rotating assembly — deck, upright servo plates, servo
+bodies, connecting rails, and the shoulder pivot hardware — stays above the
+fixed pivot plate with a visible clearance gap. Because the yaw sweep cannot
+change a part's height, this vertical separation prevents the fixed and
+rotating base geometry from clipping at any base angle, and an automated
+transform test guards the separation.
 
 ## Task-space boundary
 

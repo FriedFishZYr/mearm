@@ -70,6 +70,40 @@ describe("3D MeArm transform hierarchy", () => {
     model.dispose();
   });
 
+  it("keeps the rotating base assembly above the fixed pivot plate", () => {
+    // Rotating parts sweep about the vertical axis, so their vertical bounds
+    // are yaw-invariant: clearing the fixed plate here proves the sweep never
+    // clips the static base stack at any base angle.
+    const model = new MeArmModel(DEFAULT_PROFILE);
+    model.updateMatrixWorld(true);
+    const plateBounds = new THREE.Box3().setFromObject(model.getObjectByName("pivot-servo-plate")!);
+
+    for (const name of [
+      "rotating-deck",
+      "left-arm-servo-plate",
+      "right-arm-servo-plate",
+      "shoulder-servo",
+      "elbow-servo",
+      "front-base-rail",
+      "rear-base-rail",
+      "shoulder-joint",
+      "upper-link",
+    ]) {
+      const bounds = new THREE.Box3().setFromObject(model.getObjectByName(name)!);
+      expect(bounds.min.y, `${name} should stay above the fixed pivot plate`).toBeGreaterThan(plateBounds.max.y);
+    }
+
+    model.dispose();
+  });
+
+  it("keeps the fixed base servo body above the ground plane", () => {
+    const model = new MeArmModel(DEFAULT_PROFILE);
+    model.updateMatrixWorld(true);
+    const bodyBounds = new THREE.Box3().setFromObject(model.getObjectByName("base-servo-body")!);
+    expect(bodyBounds.min.y).toBeGreaterThanOrEqual(0);
+    model.dispose();
+  });
+
   it("opens side bays in the rotating deck for the horizontal servos", () => {
     const model = new MeArmModel(DEFAULT_PROFILE);
     const deckCore = model.getObjectByName("rotating-deck-core") as THREE.Mesh;
