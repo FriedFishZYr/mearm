@@ -24,4 +24,26 @@ describe("3D MeArm transform hierarchy", () => {
     }).not.toThrow();
     model.dispose();
   });
+
+  it("includes the assembly-inspired base, servos, linkages, and gripper", () => {
+    const model = new MeArmModel(DEFAULT_PROFILE);
+    for (const name of [
+      "base-plate",
+      "base-servo",
+      "shoulder-servo",
+      "elbow-servo",
+      "upper-link",
+      "parallel-linkage",
+      "forearm-link",
+      "forearm-parallel-linkage",
+      "claw-servo",
+      "left-gripper-gear",
+      "right-gripper-gear",
+      "left-gripper-finger",
+      "right-gripper-finger",
+    ]) {
+      expect(model.getObjectByName(name), `${name} should be present`).toBeDefined();
+    }
+    model.dispose();
+  });
 });

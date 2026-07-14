@@ -28,16 +28,26 @@ from the source kinematics even when the upper links were correct.
 
 ## Visual geometry
 
-The first-release arm uses simple boxes and cylinders rather than a CAD model.
-This keeps transforms obvious, loads quickly, and avoids implying mechanical
-accuracy that has not been measured.
+The arm is a lightweight assembly-inspired model rather than a CAD replica. Its
+visual construction follows the MeArm v4.1 assembly language: layered flat
+plates with dark cut edges, rectangular servo housings, paired structural
+links, exposed pivot fasteners, parallel linkages, and a geared two-jaw-style
+gripper. These details are built from procedural Three.js geometry, so the
+model remains fast, profile-driven, and independent of external assets.
+
+The added components are visual only. The mathematical shoulder, elbow, wrist,
+and endpoint pivots remain the authoritative transform hierarchy, and the
+assembly details do not alter kinematics or task-space calculations. The model
+intentionally avoids CAD-level detail so it does not imply unverified physical
+dimensions or collision accuracy.
 
 The model includes:
 
-- base and turntable,
-- paired upper-arm and forearm rails,
-- visible shoulder, elbow, and wrist joints,
-- horizontal hand and two animated claw fingers,
+- layered base, pivot plate, standoffs, and rotating arm frame,
+- visible base, shoulder, elbow, and claw servo housings,
+- paired upper-arm and forearm plates with secondary parallel linkages,
+- exposed shoulder, elbow, and wrist pivots and fasteners,
+- horizontal wrist plate and two animated, toothed claw fingers,
 - glowing target marker,
 - optional target path,
 - optional servo-limited task-space boundary,
