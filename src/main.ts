@@ -34,7 +34,7 @@ const clawCommandButtons = [
 app.innerHTML = `
   <div class="app-shell">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">M</div><div><p>MeArm Robotics</p><h1>Classroom Motion Lab</h1></div></div>
+      <div class="brand"><div class="brand-mark" aria-hidden="true">M</div><div><p>MeArm</p><h1>Classroom Motion Lab</h1></div></div>
       <div class="project-actions" role="group" aria-label="Project controls">
         <label class="sample-control">Example
           <select id="sample-select" aria-label="Example sketch">
