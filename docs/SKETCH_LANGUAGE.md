@@ -41,7 +41,7 @@ Unary `+` and `-` and decimal values are accepted for coordinates. Delays must
 be non-negative integers. Pin arguments may be declared integer identifiers or
 integer literals.
 
-The language is the same in all three bundled examples. Free form mode adds an
+The language is the same in all five bundled examples. Free form mode adds an
 application-level coordinate envelope—X `-100..100`, Y `100..200`, and Z
 `0..150` millimeters—before the same kinematic and servo-limit checks. That
 mode-specific envelope does not change the parser grammar.

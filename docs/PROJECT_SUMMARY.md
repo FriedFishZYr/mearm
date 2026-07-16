@@ -24,7 +24,8 @@ remains the release blocker for classroom-ready version 1.0.
 - An editable, syntax-highlighted source view with line-linked diagnostics,
   active execution highlighting, and clickable command checkpoints.
 - Play/pause, restart, previous/next command, scrub, speed, and optional repeat.
-- Instructor dance, Student starter, and Free form examples.
+- Instructor dance, Student starter, House shape dance, Cyberpunk beat dance,
+  and Free form examples.
 - Inclusive Free form bounds of X `-100..100`, Y `100..200`, and Z `0..150`
   millimeters before reachability and limit validation.
 - Copyable approved-pose, common-delay, and open/close claw commands.
@@ -33,9 +34,10 @@ remains the release blocker for classroom-ready version 1.0.
 
 ## Validation snapshot
 
-As of 2026-07-13:
+The dated evidence is maintained in the
+[validation report](VALIDATION_REPORT.md). At the latest check:
 
-- 50 tests across 10 test files pass.
+- All automated tests pass.
 - Strict TypeScript checking passes.
 - The optimized Vite build passes with the known non-blocking chunk-size
   advisory for the Three.js bundle.
@@ -45,8 +47,9 @@ As of 2026-07-13:
 - Later interface smoke checks covered multiple desktop/mobile viewport sizes
   without horizontal overflow or console errors.
 
-The latest Free form, copy-preset, reset, and command-marker flows have
-automated coverage but still need an explicit final manual browser pass.
+The five-example selection flow and the latest Free form, copy-preset, reset,
+and command-marker flows have automated coverage but still need an explicit
+final manual browser pass.
 Cross-browser, keyboard-only, assistive-technology, touch-gesture, and
 network-disabled manual checks remain recommended.
 
@@ -70,6 +73,8 @@ review. It must not be called a classroom-ready 1.0 until:
 
 ## Documentation map
 
+- [Documentation guide](README.md): organized index of current, reference,
+  planning, and historical material
 - [README](../README.md): setup, commands, features, layout, and project status
 - [PRODUCT_SPEC.md](PRODUCT_SPEC.md): product behavior and acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md): implemented modules and data flow

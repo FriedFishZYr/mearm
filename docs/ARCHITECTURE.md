@@ -38,7 +38,7 @@ preview exists, so an old timeline cannot be mistaken for the edited source.
 
 ### Application shell — `src/main.ts`
 
-Builds the interface, loads the three samples, tracks the active mode and
+Builds the interface, loads the five samples, tracks the active mode and
 profile, compiles edits, coordinates playback, and updates the 3D scene and
 inspector. It also owns editor line selection, command checkpoints, camera and
 visibility controls, copyable presets, keyboard shortcuts, and the settings
@@ -118,8 +118,8 @@ is no hardware connection or persisted calibration.
 
 Free form mode adds a separate inclusive coordinate envelope before normal
 kinematic validation: X `-100..100`, Y `100..200`, and Z `0..150` millimeters.
-The instructor and student modes do not apply this extra envelope, although all
-modes still use reachability and servo-limit validation.
+The other sample modes do not apply this extra envelope, although all modes
+still use reachability and servo-limit validation.
 
 ## Failure handling
 

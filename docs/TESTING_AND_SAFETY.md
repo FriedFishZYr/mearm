@@ -29,20 +29,21 @@ concise reminder that physical verification is required.
 
 ## Test layers
 
-The current automated suite contains 50 tests across 10 files. It covers the
-deterministic core, application preview boundary, viewer transforms and
-playback sampling, task-space boundary geometry, syntax highlighting,
-classroom samples, and required interface contracts.
+The current automated suite covers the deterministic core, application preview
+boundary, viewer transforms and playback sampling, task-space boundary
+geometry, syntax highlighting, all five bundled samples, and required
+interface contracts. Exact counts belong in the dated
+[validation report](VALIDATION_REPORT.md).
 
 The lists below describe the intended release coverage. Browser interaction,
 visual regression, and physical scenarios that are not automated are tracked
-as manual gates in `VALIDATION_REPORT.md`.
+as manual gates in the [validation report](VALIDATION_REPORT.md).
 
 ### Parser unit tests
 
 Cover:
 
-- both classroom lesson sketches,
+- all four bundled dance sequences, including comment-heavy lesson sketches,
 - whitespace and trailing comments,
 - line and block comments containing fake commands,
 - signed and decimal coordinate literals,

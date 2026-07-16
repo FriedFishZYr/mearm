@@ -25,7 +25,8 @@
 
 ## Phase 3: classroom workspace — complete
 
-- Added editable Instructor, Student, and Free form examples.
+- Added editable Instructor, Student, House shape, Cyberpunk beat, and Free
+  form examples.
 - Added playback, stepping, scrubbing, speed, repeat, and source linking.
 - Added syntax highlighting, clickable gutter checkpoints, reset behavior, and
   copyable pose, delay, and claw commands.
@@ -44,8 +45,8 @@ Completed:
 
 Remaining before 1.0:
 
-- explicitly exercise the newest Free form, copy, reset, and command-marker
-  flows in a production browser;
+- explicitly exercise all five examples plus the newest Free form, copy,
+  reset, and command-marker flows in a production browser;
 - complete recommended Chrome/Edge, keyboard-only, assistive-technology,
   touch-gesture, reduced-motion, and offline manual checks;
 - assemble and calibrate the classroom MeArm;

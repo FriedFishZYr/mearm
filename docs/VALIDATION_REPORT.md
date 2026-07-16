@@ -4,15 +4,15 @@
 
 - Product: MeArm Classroom Motion Lab
 - Candidate version: 0.9.0
-- Documentation review: 2026-07-13
+- Documentation review: 2026-07-16
 - Status: software release candidate; final browser and physical gates remain
 
 ## Current automated results
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Unit, integration, and interface-contract tests | Pass | 50 tests across 10 files |
-| Bundled classroom sketches | Pass | Instructor and Student parsing plus Free form mode contracts |
+| Unit, integration, and interface-contract tests | Pass | 57 tests across 10 files |
+| Bundled classroom sketches | Pass | Four complete dance timelines plus Free form mode contracts |
 | Approved pose endpoint accuracy | Pass | All five poses solve; round trips stay within 0.5 mm |
 | Free form coordinate envelope | Pass | Inclusive limits and out-of-bounds rejection covered |
 | Strict TypeScript checking | Pass | No diagnostics |
@@ -20,8 +20,8 @@
 | Offline runtime assets | Pass | Generated document/CSS references are local |
 | Required release CSS | Pass | Focus, responsive, and reduced-motion rules found |
 
-The 2026-07-13 production build generated approximately 608.35 kB of
-JavaScript (156.01 kB gzip) and 22.10 kB of CSS (5.14 kB gzip). Vite reports a
+The 2026-07-16 production build generated approximately 651.09 kB of
+JavaScript (168.48 kB gzip) and 23.88 kB of CSS (5.51 kB gzip). Vite reports a
 non-blocking advisory because the minified Three.js-containing JavaScript chunk
 exceeds 500 kB. This is a performance consideration, not a correctness failure.
 
@@ -38,7 +38,8 @@ Source-level tests confirm the presence and wiring contracts for:
 - disabling playback after a failed preview;
 - copyable approved-pose, delay, and open/close claw commands;
 - clickable command markers and timeline scrubbing;
-- Instructor, Student, and Free form sample selection; and
+- Instructor, Student, House shape, Cyberpunk beat, and Free form sample
+  selection; and
 - viewport, settings, and playback controls.
 
 The offline verifier also checks `:focus-visible`, narrow responsive layout,
@@ -73,10 +74,12 @@ remains enabled after the settings flow rebuilds the Three.js scene.
 The recorded passes do not explicitly cover every feature added afterward.
 Before 1.0, verify the current production build for:
 
-1. Free form limit display, inclusive boundary values, and line-linked failures;
+1. all five samples load and render, including Free form limit display,
+   inclusive boundary values, and line-linked failures;
 2. pose, delay, and claw clipboard actions, including visible/announced feedback;
 3. gutter command checkpoints and the inspector source-line link;
-4. Reset code for all three active examples;
+4. Reset code for all five examples and complete playback of the House shape
+   and Cyberpunk beat dances;
 5. every camera preset and viewport visibility toggle;
 6. repeat, Back, scrub, and all playback speeds;
 7. keyboard-only navigation and visible focus;

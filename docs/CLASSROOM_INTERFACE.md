@@ -2,12 +2,14 @@
 
 ## Code workflow
 
-The **Example** menu provides three starting sketches:
+The **Example** menu provides five starting sketches:
 
 | Example | Intended use | Additional validation |
 | --- | --- | --- |
 | Instructor dance | Complete demonstration sequence | Approved-pose cautions plus normal kinematics and limits |
 | Student starter | Guided editing exercise with commented pose menu | Approved-pose cautions plus normal kinematics and limits |
+| House shape dance | Traces a house in the X-Z plane | Normal kinematics and limits; non-preset poses require physical review |
+| Cyberpunk beat dance | Timed choreography for a 90 BPM music track | Normal kinematics and limits; non-preset poses require physical review |
 | Free form | Minimal sketch for coordinate exploration | X `-100..100`, Y `100..200`, Z `0..150` mm, then normal kinematics and limits |
 
 Selecting an example replaces the editor content and immediately builds a

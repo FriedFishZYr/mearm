@@ -3,7 +3,7 @@
 ## Current checkpoint
 
 Development is at version 0.9.0. The deterministic core, 3D viewer, classroom
-workspace, three example modes, Free form bounds, copyable presets, and code
+workspace, five example modes, Free form bounds, copyable presets, and code
 checkpoints are implemented. The automated release gate is green; physical
 MeArm comparison is deferred until the target arm is assembled and calibrated.
 
@@ -20,7 +20,8 @@ npm run dev
 ```
 
 Open the URL printed by Vite. The app initially loads the Instructor dance and
-starts paused. The other bundled examples are Student starter and Free form.
+starts paused. The other bundled examples are Student starter, House shape
+dance, Cyberpunk beat dance, and Free form.
 
 To serve the optimized build:
 
@@ -35,16 +36,17 @@ npm run preview
 npm run check
 ```
 
-This runs 50 tests across 10 files, strict TypeScript checking, a production
-build, and offline verification. The build currently emits a non-blocking
-advisory because the minified Three.js-containing JavaScript chunk exceeds
-500 kB; its current gzip size is about 156 kB.
+This runs the Vitest suite, strict TypeScript checking, a production build, and
+offline verification. The build currently emits a non-blocking chunk-size
+advisory for the Three.js-containing JavaScript bundle. Current counts and
+bundle sizes are recorded in the
+[validation report](VALIDATION_REPORT.md).
 
 ## High-value manual browser checks
 
 Run the production preview and confirm:
 
-1. all three samples load and render;
+1. all five samples load and render;
 2. out-of-range Free form coordinates report the correct axis and source line;
 3. each pose and delay preset copies the expected complete command;
 4. gutter checkpoints and the inspector source link jump to the right command;

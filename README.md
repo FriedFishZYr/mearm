@@ -13,18 +13,20 @@ physical robot.
 ## Project status
 
 The repository is a version 0.9.0 release candidate. The current automated
-gate passes with 50 tests across 10 test files, strict TypeScript checking, a
+gate passes, including the Vitest suite, strict TypeScript checking, a
 production build, and offline-asset verification. Core browser and responsive
 checks have also been completed.
 
 Physical comparison with a fully assembled and calibrated classroom MeArm is
-still required before a 1.0 classroom release. The latest free-form, preset,
-and code-checkpoint controls should also receive a final manual browser pass;
-see the [validation report](docs/VALIDATION_REPORT.md) for the exact boundary.
+still required before a 1.0 classroom release. The complete five-example flow,
+including the newer House shape and Cyberpunk beat dances, should also receive
+a final manual browser pass; see the
+[validation report](docs/VALIDATION_REPORT.md) for the exact boundary.
 
 ## Features
 
-- Three editable examples: Instructor dance, Student starter, and Free form.
+- Five editable examples: Instructor dance, Student starter, House shape,
+  Cyberpunk beat, and Free form.
 - Safe parsing of sequential `begin`, `moveToXYZ`, `snapToXYZ`, claw, and
   `delay` calls; pasted code is never executed.
 - Deterministic movement timing based on the classroom MeArm profile.
@@ -124,7 +126,7 @@ calibrate a connected Arduino or robot.
 ```text
 src/app/       preview compilation and syntax highlighting
 src/core/      parser, profile, kinematics, timeline, and shared types
-src/samples/   the three bundled Arduino sketches
+src/samples/   the five bundled Arduino sketches
 src/viewer/    Three.js model, scene, and playback sampling
 tests/         unit, integration, interface-contract, and fixture coverage
 scripts/       release and offline verification helpers
@@ -133,21 +135,12 @@ docs/          product, architecture, operation, validation, and safety docs
 
 ## Documentation
 
-- [Project summary](docs/PROJECT_SUMMARY.md)
-- [Product specification](docs/PRODUCT_SPEC.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Classroom interface guide](docs/CLASSROOM_INTERFACE.md)
-- [Supported sketch language](docs/SKETCH_LANGUAGE.md)
-- [3D viewer model](docs/VIEWER_MODEL.md)
-- [Task-space calculation tutorial](docs/TASK_SPACE_CALCULATION.md)
-- [Task Space Lab guide](public/TASK_SPACE_LAB.md)
-- [Testing and safety](docs/TESTING_AND_SAFETY.md)
-- [Release validation report](docs/VALIDATION_REPORT.md)
-- [Physical validation protocol](docs/PHYSICAL_VALIDATION.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Technology decision](docs/TECHNOLOGY_DECISION.md)
-- [Project handoff](docs/PROJECT_HANDOFF.md)
-- [UI refinement changelog](docs/UI_REFINEMENT_CHANGELOG.md)
+Use the [documentation guide](docs/README.md) to browse current product,
+implementation, validation, reference, planning, and historical material. The
+most important release documents are the
+[project summary](docs/PROJECT_SUMMARY.md),
+[validation report](docs/VALIDATION_REPORT.md), and
+[physical validation protocol](docs/PHYSICAL_VALIDATION.md).
 
 Behavior that changes simulation, supported syntax, diagnostics, or safety
 warnings should be documented with the implementation change.

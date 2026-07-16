@@ -2,10 +2,10 @@
 
 ## Purpose
 
-MeArm Live Viewer gives a student an immediate visual answer to: “What will my
-robot dance do?” It also gives an instructor a quick first-pass check for
-unreachable poses and unexpected command order before code reaches classroom
-hardware.
+MeArm Classroom Motion Lab gives a student an immediate visual answer to:
+“What will my robot dance do?” It also gives an instructor a quick first-pass
+check for unreachable poses and unexpected command order before code reaches
+classroom hardware.
 
 The viewer is a teaching and preview tool. It is not a guarantee that a motion
 is physically safe.
@@ -26,8 +26,7 @@ the command responsible for a pose, and identify warnings before upload.
 ## Core workflow
 
 1. Open the viewer.
-2. Edit a supported `.ino` sketch or load the Instructor, Student, or Free form
-   example.
+2. Edit a supported `.ino` sketch or load one of the five bundled examples.
 3. Select **Preview code** or press Ctrl/Command + Enter.
 4. If parsing succeeds, see the arm at its initial/home pose and a timeline of
    commands.
@@ -42,7 +41,8 @@ the command responsible for a pose, and identify warnings before upload.
 ### Sketch input
 
 - Provide a plain-text code editor or paste area.
-- Ship with Instructor dance, Student starter, and Free form examples.
+- Ship with Instructor dance, Student starter, House shape dance, Cyberpunk
+  beat dance, and Free form examples.
 - In Free form mode, reject movement coordinates outside the inclusive X
   `-100..100`, Y `100..200`, and Z `0..150` millimeter envelope before normal
   kinematic validation.
@@ -120,8 +120,8 @@ until a valid preview is built.
 
 ## Acceptance criteria for the first release
 
-- Both classroom lesson sketches parse without false commands from comments,
-  and the Free form starter builds a valid preview.
+- All five bundled examples build valid previews; comments do not create false
+  commands in the classroom lesson sketches.
 - HOME, LEFT, RIGHT, HIGH, and LOW animate to their documented coordinates.
 - The displayed endpoint is within 0.5 mm of the requested valid target.
 - At `1x`, command timing agrees with the source library model within one
