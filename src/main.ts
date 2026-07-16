@@ -2,12 +2,24 @@ import "./styles.css";
 import freeFormSketch from "./samples/MeArm_Free_Form.ino?raw";
 import instructorSketch from "./samples/MeArm_Dance_Instructor.ino?raw";
 import studentSketch from "./samples/MeArm_Dance_Student.ino?raw";
+import cyberpunkBeatSketch from "./samples/MeArm_Cyberpunk_Beat_Dance.ino?raw";
+import houseShapeSketch from "./samples/MeArm_House_Shape_Dance.ino?raw";
 import { highlightArduino } from "./app/highlight";
 import { compilePreview, createProfile, defaultProfileValues, FREE_FORM_BOUNDS, lineRange, profileToValues, type ProfileValues } from "./app/preview";
 import { DEFAULT_PROFILE, validateProfile } from "./core/profile";
 import type { Command, JointAngles, Point3, RobotProfile, Timeline } from "./core/types";
 import { collectPath, collectTravelPoints, sampleSegments } from "./viewer/playback";
 import { MeArmScene, type CameraPreset } from "./viewer/scene";
+
+type SampleMode = "instructor" | "student" | "house" | "cyberpunk" | "freeform";
+
+const samples: Record<SampleMode, { title: string; source: string }> = {
+  instructor: { title: "Instructor dance", source: instructorSketch },
+  student: { title: "Student starter", source: studentSketch },
+  house: { title: "House shape dance", source: houseShapeSketch },
+  cyberpunk: { title: "Cyberpunk beat dance", source: cyberpunkBeatSketch },
+  freeform: { title: "Free form", source: freeFormSketch },
+};
 
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) throw new Error("Application root was not found.");
@@ -40,6 +52,8 @@ app.innerHTML = `
           <select id="sample-select" aria-label="Example sketch">
             <option value="instructor">Instructor dance</option>
             <option value="student">Student starter</option>
+            <option value="house">House shape dance</option>
+            <option value="cyberpunk">Cyberpunk beat dance</option>
             <option value="freeform">Free form</option>
             <option value="custom" disabled>Edited sketch</option>
           </select>
@@ -257,13 +271,13 @@ let dirty = false;
 let previewReady = false;
 let lastStatus = "";
 let copyFeedbackTimer: number | undefined;
-let activeMode: "instructor" | "student" | "freeform" = "instructor";
+let activeMode: SampleMode = "instructor";
 
-function loadSample(name: "instructor" | "student" | "freeform"): void {
+function loadSample(name: SampleMode): void {
   activeMode = name;
-  editor.value = name === "student" ? studentSketch : name === "freeform" ? freeFormSketch : instructorSketch;
+  editor.value = samples[name].source;
   sampleSelect.value = name;
-  get("dance-title").textContent = name === "student" ? "Student starter" : name === "freeform" ? "Free form" : "Instructor dance";
+  get("dance-title").textContent = samples[name].title;
   get("freeform-constraints").hidden = name !== "freeform";
   dirty = false;
   updateGutter();
@@ -580,7 +594,7 @@ editor.addEventListener("input", () => { dirty = true; get("editor-state").textC
 editor.addEventListener("scroll", syncEditorScroll);
 editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); compileCurrent(); } });
 sampleSelect.addEventListener("change", () => {
-  if (sampleSelect.value === "instructor" || sampleSelect.value === "student" || sampleSelect.value === "freeform") loadSample(sampleSelect.value);
+  if (sampleSelect.value === "instructor" || sampleSelect.value === "student" || sampleSelect.value === "house" || sampleSelect.value === "cyberpunk" || sampleSelect.value === "freeform") loadSample(sampleSelect.value);
 });
 get("preview").addEventListener("click", () => compileCurrent());
 get("reset-code").addEventListener("click", resetCode);
