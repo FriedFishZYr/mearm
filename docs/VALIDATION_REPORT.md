@@ -4,7 +4,7 @@
 
 - Product: MeArm Classroom Motion Lab
 - Candidate version: 0.9.0
-- Documentation review: 2026-07-16
+- Documentation review: 2026-07-20
 - Status: software release candidate; final browser and physical gates remain
 
 ## Current automated results
@@ -12,7 +12,7 @@
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Unit, integration, and interface-contract tests | Pass | 57 tests across 10 files |
-| Bundled classroom sketches | Pass | Four complete dance timelines plus Free form mode contracts |
+| Bundled classroom sketches | Pass | Original sample matrix passes in the committed suite; Pick and place, Pre-programmed sorting line, and Palletizing passed targeted parser and interpolated-motion validation during integration |
 | Approved pose endpoint accuracy | Pass | All five poses solve; round trips stay within 0.5 mm |
 | Free form coordinate envelope | Pass | Inclusive limits and out-of-bounds rejection covered |
 | Strict TypeScript checking | Pass | No diagnostics |
@@ -38,9 +38,13 @@ Source-level tests confirm the presence and wiring contracts for:
 - disabling playback after a failed preview;
 - copyable approved-pose, delay, and open/close claw commands;
 - clickable command markers and timeline scrubbing;
-- Instructor, Student, House shape, Cyberpunk beat, and Free form sample
-  selection; and
+- original Instructor, Student, House shape, Cyberpunk beat, and Free form
+  selection contracts; and
 - viewport, settings, and playback controls.
+
+Separate integration inspection confirmed the registered Pick and place,
+Pre-programmed sorting line, and Palletizing menu options, their distinct source
+mappings, and the shared selector routing used to load them.
 
 The offline verifier also checks `:focus-visible`, narrow responsive layout,
 and reduced-motion CSS. These source contracts do not replace interaction with
@@ -74,12 +78,12 @@ remains enabled after the settings flow rebuilds the Three.js scene.
 The recorded passes do not explicitly cover every feature added afterward.
 Before 1.0, verify the current production build for:
 
-1. all five samples load and render, including Free form limit display,
+1. all eight samples load their own source and render, including Free form limit display,
    inclusive boundary values, and line-linked failures;
 2. pose, delay, and claw clipboard actions, including visible/announced feedback;
 3. gutter command checkpoints and the inspector source-line link;
-4. Reset code for all five examples and complete playback of the House shape
-   and Cyberpunk beat dances;
+4. Reset code for all eight examples and complete playback of the three
+   industrial routines plus the House shape and Cyberpunk beat dances;
 5. every camera preset and viewport visibility toggle;
 6. repeat, Back, scrub, and all playback speeds;
 7. keyboard-only navigation and visible focus;

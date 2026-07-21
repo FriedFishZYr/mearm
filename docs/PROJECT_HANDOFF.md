@@ -3,7 +3,7 @@
 ## Current checkpoint
 
 Development is at version 0.9.0. The deterministic core, 3D viewer, classroom
-workspace, five example modes, Free form bounds, copyable presets, and code
+workspace, eight example modes, Free form bounds, copyable presets, and code
 checkpoints are implemented. The automated release gate is green; physical
 MeArm comparison is deferred until the target arm is assembled and calibrated.
 
@@ -20,8 +20,9 @@ npm run dev
 ```
 
 Open the URL printed by Vite. The app initially loads the Instructor dance and
-starts paused. The other bundled examples are Student starter, House shape
-dance, Cyberpunk beat dance, and Free form.
+starts paused. The other bundled examples are Student starter, Pick and place,
+Pre-programmed sorting line, Palletizing, House shape dance, Cyberpunk beat
+dance, and Free form.
 
 To serve the optimized build:
 
@@ -46,7 +47,7 @@ bundle sizes are recorded in the
 
 Run the production preview and confirm:
 
-1. all five samples load and render;
+1. all eight samples load their own source and render;
 2. out-of-range Free form coordinates report the correct axis and source line;
 3. each pose and delay preset copies the expected complete command;
 4. gutter checkpoints and the inspector source link jump to the right command;

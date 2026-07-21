@@ -4,6 +4,9 @@ import instructorSketch from "./samples/MeArm_Dance_Instructor.ino?raw";
 import studentSketch from "./samples/MeArm_Dance_Student.ino?raw";
 import cyberpunkBeatSketch from "./samples/MeArm_Cyberpunk_Beat_Dance.ino?raw";
 import houseShapeSketch from "./samples/MeArm_House_Shape_Dance.ino?raw";
+import pickAndPlaceSketch from "./samples/MeArm_Pick_And_Place.ino?raw";
+import sortingLineSketch from "./samples/MeArm_Sorting_Line.ino?raw";
+import palletizingSketch from "./samples/MeArm_Palletizing.ino?raw";
 import { highlightArduino } from "./app/highlight";
 import { compilePreview, createProfile, defaultProfileValues, FREE_FORM_BOUNDS, lineRange, profileToValues, type ProfileValues } from "./app/preview";
 import { DEFAULT_PROFILE, validateProfile } from "./core/profile";
@@ -11,15 +14,22 @@ import type { Command, JointAngles, Point3, RobotProfile, Timeline } from "./cor
 import { collectPath, collectTravelPoints, sampleSegments } from "./viewer/playback";
 import { MeArmScene, type CameraPreset } from "./viewer/scene";
 
-type SampleMode = "instructor" | "student" | "house" | "cyberpunk" | "freeform";
+type SampleMode = "instructor" | "student" | "pick-place" | "sorting" | "palletizing" | "house" | "cyberpunk" | "freeform";
 
 const samples: Record<SampleMode, { title: string; source: string }> = {
   instructor: { title: "Instructor dance", source: instructorSketch },
   student: { title: "Student starter", source: studentSketch },
+  "pick-place": { title: "Pick and place", source: pickAndPlaceSketch },
+  sorting: { title: "Pre-programmed sorting line", source: sortingLineSketch },
+  palletizing: { title: "Palletizing", source: palletizingSketch },
   house: { title: "House shape dance", source: houseShapeSketch },
   cyberpunk: { title: "Cyberpunk beat dance", source: cyberpunkBeatSketch },
   freeform: { title: "Free form", source: freeFormSketch },
 };
+
+function isSampleMode(value: string): value is SampleMode {
+  return Object.prototype.hasOwnProperty.call(samples, value);
+}
 
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) throw new Error("Application root was not found.");
@@ -52,6 +62,9 @@ app.innerHTML = `
           <select id="sample-select" aria-label="Example sketch">
             <option value="instructor">Instructor dance</option>
             <option value="student">Student starter</option>
+            <option value="pick-place">Pick and place</option>
+            <option value="sorting">Pre-programmed sorting line</option>
+            <option value="palletizing">Palletizing</option>
             <option value="house">House shape dance</option>
             <option value="cyberpunk">Cyberpunk beat dance</option>
             <option value="freeform">Free form</option>
@@ -66,7 +79,7 @@ app.innerHTML = `
     <main class="workspace">
       <section class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-heading">
-          <div><p class="eyebrow">Arduino sketch</p><h2 id="editor-title">Dance code</h2></div>
+          <div><p class="eyebrow">Arduino sketch</p><h2 id="editor-title">Code</h2></div>
           <button id="reset-code" class="reset-code-button" type="button">Reset code</button>
         </div>
         <div id="editor-message" class="editor-message success" role="status">Instructor dance is ready to preview.</div>
@@ -594,7 +607,7 @@ editor.addEventListener("input", () => { dirty = true; get("editor-state").textC
 editor.addEventListener("scroll", syncEditorScroll);
 editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); compileCurrent(); } });
 sampleSelect.addEventListener("change", () => {
-  if (sampleSelect.value === "instructor" || sampleSelect.value === "student" || sampleSelect.value === "house" || sampleSelect.value === "cyberpunk" || sampleSelect.value === "freeform") loadSample(sampleSelect.value);
+  if (isSampleMode(sampleSelect.value)) loadSample(sampleSelect.value);
 });
 get("preview").addEventListener("click", () => compileCurrent());
 get("reset-code").addEventListener("click", resetCode);

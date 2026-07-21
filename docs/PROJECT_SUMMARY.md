@@ -3,7 +3,7 @@
 ## Outcome
 
 MeArm Classroom Motion Lab is a working static web application that turns a
-safe subset of beginner Arduino dance code into a deterministic timeline and a
+safe subset of beginner Arduino motion code into a deterministic timeline and a
 linked 3D animation. It combines classroom examples, source navigation,
 kinematic diagnostics, playback controls, configurable simulation geometry,
 and an explicit physical-safety boundary in one local-first workspace.
@@ -24,8 +24,11 @@ remains the release blocker for classroom-ready version 1.0.
 - An editable, syntax-highlighted source view with line-linked diagnostics,
   active execution highlighting, and clickable command checkpoints.
 - Play/pause, restart, previous/next command, scrub, speed, and optional repeat.
-- Instructor dance, Student starter, House shape dance, Cyberpunk beat dance,
-  and Free form examples.
+- Instructor dance, Student starter, Pick and place, Pre-programmed sorting
+  line, Palletizing, House shape dance, Cyberpunk beat dance, and Free form
+  examples.
+- Custom non-preset standby, work, inspection, and transfer coordinates in the
+  industrial examples, with HOME retained only for required initialization.
 - Inclusive Free form bounds of X `-100..100`, Y `100..200`, and Z `0..150`
   millimeters before reachability and limit validation.
 - Copyable approved-pose, common-delay, and open/close claw commands.

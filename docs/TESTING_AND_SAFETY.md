@@ -31,8 +31,10 @@ concise reminder that physical verification is required.
 
 The current automated suite covers the deterministic core, application preview
 boundary, viewer transforms and playback sampling, task-space boundary
-geometry, syntax highlighting, all five bundled samples, and required
-interface contracts. Exact counts belong in the dated
+geometry, syntax highlighting, the original sample fixtures, and required
+interface contracts. The three industrial sketches also received targeted
+parser and interpolated-motion validation when they were integrated. Exact
+committed-suite counts belong in the dated
 [validation report](VALIDATION_REPORT.md).
 
 The lists below describe the intended release coverage. Browser interaction,
@@ -43,7 +45,8 @@ as manual gates in the [validation report](VALIDATION_REPORT.md).
 
 Cover:
 
-- all four bundled dance sequences, including comment-heavy lesson sketches,
+- all seven bundled programmed sequences—four dance/drawing examples and three
+  industrial examples—including comment-heavy lesson sketches,
 - whitespace and trailing comments,
 - line and block comments containing fake commands,
 - signed and decimal coordinate literals,
@@ -122,7 +125,7 @@ Before a sketch is approved for student hardware:
 6. Test each new pose individually at low speed or with power ready to
    disconnect.
 7. Stop if a servo buzzes, binds, heats, or drives against a mechanical stop.
-8. Only then run the full repeated dance.
+8. Only then run the full repeated motion sequence.
 
 ## Definition of done for a release
 
@@ -131,8 +134,8 @@ Before a sketch is approved for student hardware:
 - Shipped samples work offline in each supported browser.
 - Accessibility checks cover keyboard use, labels, focus, contrast, and
   non-color status cues.
-- An instructor has compared all approved poses and one complete dance with a
-  physically calibrated MeArm.
+- An instructor has compared all approved poses, one complete dance, and the
+  industrial task motions with a physically calibrated MeArm.
 - Known simulation limitations are visible in the application and release
   notes.
 

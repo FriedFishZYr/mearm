@@ -1,7 +1,7 @@
 # MeArm Classroom Motion Lab
 
 MeArm Classroom Motion Lab is a local-first, browser-based 3D previewer for
-beginner MeArm Arduino dance sketches. It parses a deliberately small and safe
+beginner MeArm Arduino motion sketches. It parses a deliberately small and safe
 Arduino subset, builds a deterministic motion timeline, animates a simplified
 MeArm, and links each simulated command back to its source line.
 
@@ -18,15 +18,16 @@ production build, and offline-asset verification. Core browser and responsive
 checks have also been completed.
 
 Physical comparison with a fully assembled and calibrated classroom MeArm is
-still required before a 1.0 classroom release. The complete five-example flow,
-including the newer House shape and Cyberpunk beat dances, should also receive
-a final manual browser pass; see the
+still required before a 1.0 classroom release. The complete eight-example flow,
+including the industrial and dance demonstrations, should also receive a final
+manual browser pass; see the
 [validation report](docs/VALIDATION_REPORT.md) for the exact boundary.
 
 ## Features
 
-- Five editable examples: Instructor dance, Student starter, House shape,
-  Cyberpunk beat, and Free form.
+- Eight editable examples: Instructor dance, Student starter, Pick and place,
+  Pre-programmed sorting line, Palletizing, House shape, Cyberpunk beat, and
+  Free form.
 - Safe parsing of sequential `begin`, `moveToXYZ`, `snapToXYZ`, claw, and
   `delay` calls; pasted code is never executed.
 - Deterministic movement timing based on the classroom MeArm profile.
@@ -126,7 +127,7 @@ calibrate a connected Arduino or robot.
 ```text
 src/app/       preview compilation and syntax highlighting
 src/core/      parser, profile, kinematics, timeline, and shared types
-src/samples/   the five bundled Arduino sketches
+src/samples/   the eight bundled Arduino sketches
 src/viewer/    Three.js model, scene, and playback sampling
 tests/         unit, integration, interface-contract, and fixture coverage
 scripts/       release and offline verification helpers

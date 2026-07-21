@@ -2,12 +2,15 @@
 
 ## Code workflow
 
-The **Example** menu provides five starting sketches:
+The **Example** menu provides eight starting sketches:
 
 | Example | Intended use | Additional validation |
 | --- | --- | --- |
 | Instructor dance | Complete demonstration sequence | Approved-pose cautions plus normal kinematics and limits |
 | Student starter | Guided editing exercise with commented pose menu | Approved-pose cautions plus normal kinematics and limits |
+| Pick and place | Transfers a part between two workstations using approach, lift, transfer, place, and retract motions | Custom non-preset coordinates require physical review |
+| Pre-programmed sorting line | Routes two known parts from one input station through an inspection waypoint to left and right bins | Fixed sequence only; no sensor-based identification; custom coordinates require physical review |
+| Palletizing | Repeats a supply-to-pallet cycle for three pallet positions | Custom standby, clearance, and placement coordinates require physical review |
 | House shape dance | Traces a house in the X-Z plane | Normal kinematics and limits; non-preset poses require physical review |
 | Cyberpunk beat dance | Timed choreography for a 90 BPM music track | Normal kinematics and limits; non-preset poses require physical review |
 | Free form | Minimal sketch for coordinate exploration | X `-100..100`, Y `100..200`, Z `0..150` mm, then normal kinematics and limits |
@@ -16,6 +19,12 @@ Selecting an example replaces the editor content and immediately builds a
 preview. Editing changes the menu label to **Edited sketch** and marks the
 preview as out of date. **Reset code** restores the original source for the
 active example.
+
+The three industrial examples use custom work coordinates rather than the
+copyable HOME, LEFT, RIGHT, HIGH, or LOW presets. They use a custom standby pose
+and task-specific transfer or inspection waypoints to make path planning
+visible. The MeArm library's required `begin()` call still initializes the arm
+at the configured HOME position before `loop()` starts.
 
 Select **Preview code** or press Ctrl/Command + Enter to:
 
@@ -31,7 +40,8 @@ paused by default and repetition is opt-in.
 
 ## Editor and source navigation
 
-The code area uses a native textarea over an escaped syntax-highlight layer.
+The left panel is titled **Code** and uses a native textarea over an escaped
+syntax-highlight layer.
 Line numbers remain synchronized with editing and scrolling.
 
 After a successful preview, executable `loop()` lines receive clickable command

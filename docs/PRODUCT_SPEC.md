@@ -3,7 +3,7 @@
 ## Purpose
 
 MeArm Classroom Motion Lab gives a student an immediate visual answer to:
-“What will my robot dance do?” It also gives an instructor a quick first-pass
+“What will my robot do?” It also gives an instructor a quick first-pass
 check for unreachable poses and unexpected command order before code reaches
 classroom hardware.
 
@@ -20,13 +20,13 @@ kinematics, servo angles, or 3D software.
 
 ### Instructor
 
-An adult who wants to review a sketch, see its complete repeated dance, locate
+An adult who wants to review a sketch, see its complete repeated motion, locate
 the command responsible for a pose, and identify warnings before upload.
 
 ## Core workflow
 
 1. Open the viewer.
-2. Edit a supported `.ino` sketch or load one of the five bundled examples.
+2. Edit a supported `.ino` sketch or load one of the eight bundled examples.
 3. Select **Preview code** or press Ctrl/Command + Enter.
 4. If parsing succeeds, see the arm at its initial/home pose and a timeline of
    commands.
@@ -41,8 +41,12 @@ the command responsible for a pose, and identify warnings before upload.
 ### Sketch input
 
 - Provide a plain-text code editor or paste area.
-- Ship with Instructor dance, Student starter, House shape dance, Cyberpunk
-  beat dance, and Free form examples.
+- Ship with Instructor dance, Student starter, Pick and place, Pre-programmed
+  sorting line, Palletizing, House shape dance, Cyberpunk beat dance, and Free
+  form examples.
+- Use custom non-preset work, standby, inspection, and transfer coordinates in
+  the three industrial examples. The required `begin()` initialization may
+  still place the arm at the configured HOME position.
 - In Free form mode, reject movement coordinates outside the inclusive X
   `-100..100`, Y `100..200`, and Z `0..150` millimeter envelope before normal
   kinematic validation.
@@ -120,7 +124,7 @@ until a valid preview is built.
 
 ## Acceptance criteria for the first release
 
-- All five bundled examples build valid previews; comments do not create false
+- All eight bundled examples build valid previews; comments do not create false
   commands in the classroom lesson sketches.
 - HOME, LEFT, RIGHT, HIGH, and LOW animate to their documented coordinates.
 - The displayed endpoint is within 0.5 mm of the requested valid target.
