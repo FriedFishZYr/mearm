@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Point3, RobotProfile } from "../core/types";
+import { AXES_HELPER_ARGS, GRID, LIGHT, ROBOT, SHARED } from "../design/palette";
 import { MeArmModel, type ViewerStatus } from "./arm-model";
 import type { PlaybackFrame } from "./playback";
 import { TaskSpaceBoundary } from "./task-space";
@@ -16,14 +17,14 @@ export class MeArmScene {
   private readonly controls: OrbitControls;
   private readonly model: MeArmModel;
   private readonly taskSpace: TaskSpaceBoundary;
-  private readonly grid = new THREE.GridHelper(420, 21, 0xa9b1b7, 0xd9dee1);
+  private readonly grid = new THREE.GridHelper(420, 21, GRID.center, GRID.line);
   private readonly axes = new THREE.AxesHelper(55);
   private readonly pathLabels = new THREE.Group();
   private readonly resizeObserver: ResizeObserver;
 
   constructor(private readonly container: HTMLElement, profile: RobotProfile) {
-    this.scene.background = new THREE.Color(0xf1f3f4);
-    this.scene.fog = new THREE.FogExp2(0xf1f3f4, 0.0012);
+    this.scene.background = new THREE.Color(SHARED.surfaceCanvas);
+    this.scene.fog = new THREE.FogExp2(SHARED.surfaceCanvas, 0.0012);
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -47,8 +48,8 @@ export class MeArmScene {
     this.controls.maxPolarAngle = Math.PI * 0.49;
     this.controls.target.set(0, 75, 65);
 
-    const ambient = new THREE.HemisphereLight(0xffffff, 0xc9ced2, 2.25);
-    const key = new THREE.DirectionalLight(0xfff8ec, 3.2);
+    const ambient = new THREE.HemisphereLight(LIGHT.sky, LIGHT.ground, 2.25);
+    const key = new THREE.DirectionalLight(LIGHT.key, 3.2);
     key.position.set(-140, 260, 120);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -60,14 +61,20 @@ export class MeArmScene {
 
     const floor = new THREE.Mesh(
       new THREE.CircleGeometry(245, 64),
-      new THREE.MeshStandardMaterial({ color: 0xf7f8f9, roughness: 0.92 }),
+      new THREE.MeshStandardMaterial({ color: ROBOT.floor, roughness: 0.92 }),
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     floor.position.y = -0.5;
     this.scene.add(floor, this.grid);
 
-    this.axes.setColors(new THREE.Color(0xa93642), new THREE.Color(0x246b9e), new THREE.Color(0x246b5b));
+    // Argument order is deliberate and looks transposed: this app is Z-up while
+    // Three is Y-up, so app-Z occupies Three's Y slot. See AXES_HELPER_ARGS.
+    this.axes.setColors(
+      new THREE.Color(AXES_HELPER_ARGS[0]),
+      new THREE.Color(AXES_HELPER_ARGS[1]),
+      new THREE.Color(AXES_HELPER_ARGS[2]),
+    );
     this.axes.position.y = 1;
     const xLabel = this.makeLabel("X", "axis-label axis-label-x");
     const yLabel = this.makeLabel("Y", "axis-label axis-label-y");

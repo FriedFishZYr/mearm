@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { solveForward } from "../core/kinematics";
 import type { JointAngles, RobotProfile } from "../core/types";
+import { SHARED } from "../design/palette";
 
 const DEFAULT_SEGMENTS = 20;
 
@@ -131,14 +132,14 @@ export class TaskSpaceBoundary extends THREE.Group {
   private readonly surfaceGeometry: THREE.BufferGeometry;
   private readonly gridGeometry: THREE.BufferGeometry;
   private readonly surfaceMaterial = new THREE.MeshBasicMaterial({
-    color: 0x4fa8b3,
+    color: SHARED.taskSpace,
     transparent: true,
     opacity: 0.11,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
   private readonly gridMaterial = new THREE.LineBasicMaterial({
-    color: 0x4fa8b3,
+    color: SHARED.taskSpace,
     transparent: true,
     opacity: 0.24,
     depthWrite: false,

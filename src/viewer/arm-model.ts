@@ -1,20 +1,24 @@
 import * as THREE from "three";
 import type { JointAngles, Point3, RobotProfile } from "../core/types";
+import { NO_EMISSIVE, ROBOT, SHARED, STATUS } from "../design/palette";
 
 export type ViewerStatus = "valid" | "caution" | "invalid";
 
+// Material inputs and scene-tuned status colors, sourced from the shared
+// palette. The status values here are the `scene` forms, not the `text` forms
+// used by the chrome — see src/design/palette.ts for why they differ.
 const COLORS = {
-  wood: 0xc99a61,
-  woodEdge: 0x5f4028,
-  servo: 0x252a2e,
-  servoLabel: 0xb23a48,
-  joint: 0x343b40,
-  metal: 0xc8d0d5,
-  claw: 0xd4a05f,
-  path: 0x7568c5,
-  valid: 0x2f806d,
-  caution: 0xffc857,
-  invalid: 0xff5f6d,
+  wood: ROBOT.wood,
+  woodEdge: ROBOT.woodEdge,
+  servo: ROBOT.servo,
+  servoLabel: ROBOT.servoLabel,
+  joint: ROBOT.joint,
+  metal: ROBOT.metal,
+  claw: ROBOT.claw,
+  path: SHARED.path,
+  valid: STATUS.valid.scene,
+  caution: STATUS.caution.scene,
+  invalid: STATUS.invalid.scene,
 };
 
 const V41_VISUAL_DIMENSIONS = Object.freeze({
@@ -318,7 +322,7 @@ export class MeArmModel extends THREE.Group {
     targetMaterial.color.setHex(color);
     targetMaterial.emissive.setHex(color);
     for (const material of this.frameMaterials) {
-      material.emissive.setHex(status === "valid" ? 0x000000 : color);
+      material.emissive.setHex(status === "valid" ? NO_EMISSIVE : color);
       material.emissiveIntensity = status === "valid" ? 0 : 0.1;
     }
   }

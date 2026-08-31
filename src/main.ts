@@ -1,258 +1,17 @@
 import "./styles.css";
-import freeFormSketch from "./samples/MeArm_Free_Form.ino?raw";
-import instructorSketch from "./samples/MeArm_Dance_Instructor.ino?raw";
-import studentSketch from "./samples/MeArm_Dance_Student.ino?raw";
-import cyberpunkBeatSketch from "./samples/MeArm_Cyberpunk_Beat_Dance.ino?raw";
-import houseShapeSketch from "./samples/MeArm_House_Shape_Dance.ino?raw";
-import pickAndPlaceSketch from "./samples/MeArm_Pick_And_Place.ino?raw";
-import sortingLineSketch from "./samples/MeArm_Sorting_Line.ino?raw";
-import palletizingSketch from "./samples/MeArm_Palletizing.ino?raw";
 import { highlightArduino } from "./app/highlight";
+import { extractLesson } from "./app/lesson";
 import { compilePreview, createProfile, defaultProfileValues, FREE_FORM_BOUNDS, lineRange, profileToValues, type ProfileValues } from "./app/preview";
 import { DEFAULT_PROFILE, validateProfile } from "./core/profile";
 import type { Command, JointAngles, Point3, RobotProfile, Timeline } from "./core/types";
 import { collectPath, collectTravelPoints, sampleSegments } from "./viewer/playback";
 import { MeArmScene, type CameraPreset } from "./viewer/scene";
+import { EXAMPLE_GROUPS, isSampleMode, renderExampleGallery, samples, type SampleMode } from "./views/examples";
+import { renderPresetCommands } from "./views/presets";
 
-type SampleMode = "instructor" | "student" | "pick-place" | "sorting" | "palletizing" | "house" | "cyberpunk" | "freeform";
-
-const samples: Record<SampleMode, { title: string; source: string }> = {
-  instructor: { title: "Instructor dance", source: instructorSketch },
-  student: { title: "Student starter", source: studentSketch },
-  "pick-place": { title: "Pick and place", source: pickAndPlaceSketch },
-  sorting: { title: "Pre-programmed sorting line", source: sortingLineSketch },
-  palletizing: { title: "Palletizing", source: palletizingSketch },
-  house: { title: "House shape dance", source: houseShapeSketch },
-  cyberpunk: { title: "Cyberpunk beat dance", source: cyberpunkBeatSketch },
-  freeform: { title: "Free form", source: freeFormSketch },
-};
-
-function isSampleMode(value: string): value is SampleMode {
-  return Object.prototype.hasOwnProperty.call(samples, value);
-}
-
-const app = document.querySelector<HTMLElement>("#app");
-if (!app) throw new Error("Application root was not found.");
-
-const presetCommand = (pose: Point3): string => `arm.moveToXYZ(${pose.x}, ${pose.y}, ${pose.z});`;
-const presetCommandButtons = DEFAULT_PROFILE.approvedPoses.map((pose) => {
-  const command = presetCommand(pose);
-  return `<button class="copy-command preset-command" type="button" data-command="${command}" data-preset-name="${pose.name}" aria-label="Copy ${command}" title="Copy ${command}">
-    <span class="preset-name">${pose.name}</span>
-    <code>${command}</code>
-  </button>`;
-}).join("");
-const delayCommandButtons = [250, 500, 1000, 2000].map((milliseconds) => {
-  const command = `delay(${milliseconds});`;
-  return `<button class="copy-command delay-command" type="button" data-command="${command}" data-preset-name="${milliseconds} ms delay" aria-label="Copy ${command}" title="Copy ${command}">
-    <strong>${milliseconds}</strong><small>ms</small>
-  </button>`;
-}).join("");
-const clawCommandButtons = [
-  { name: "Open claw", command: "arm.openClaw();" },
-  { name: "Close claw", command: "arm.closeClaw();" },
-].map(({ name, command }) => `<button class="copy-command claw-command" type="button" data-command="${command}" data-preset-name="${name}" aria-label="Copy ${command}" title="Copy ${command}"><code>${command}</code></button>`).join("");
-
-app.innerHTML = `
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">M</div><div><p>MeArm</p><h1>Classroom Motion Lab</h1></div></div>
-      <div class="project-actions" role="group" aria-label="Project controls">
-        <label class="sample-control">Example
-          <select id="sample-select" aria-label="Example sketch">
-            <option value="instructor">Instructor dance</option>
-            <option value="student">Student starter</option>
-            <option value="pick-place">Pick and place</option>
-            <option value="sorting">Pre-programmed sorting line</option>
-            <option value="palletizing">Palletizing</option>
-            <option value="house">House shape dance</option>
-            <option value="cyberpunk">Cyberpunk beat dance</option>
-            <option value="freeform">Free form</option>
-            <option value="custom" disabled>Edited sketch</option>
-          </select>
-        </label>
-        <button id="settings-open" class="top-button secondary-button" type="button">Robot settings</button>
-        <button id="preview" class="preview-button" type="button">Preview code</button>
-      </div>
-    </header>
-
-    <main class="workspace">
-      <section class="editor-panel" aria-labelledby="editor-title">
-        <div class="panel-heading">
-          <div><p class="eyebrow">Arduino sketch</p><h2 id="editor-title">Code</h2></div>
-          <button id="reset-code" class="reset-code-button" type="button">Reset code</button>
-        </div>
-        <div id="editor-message" class="editor-message success" role="status">Instructor dance is ready to preview.</div>
-        <div class="editor-wrap">
-          <div class="gutter"><div id="line-numbers" role="group" aria-label="Code command markers"></div></div>
-          <div class="editor-surface">
-            <pre id="code-highlight" class="code-highlight" aria-hidden="true"></pre>
-            <textarea id="code-editor" aria-label="Arduino dance code" wrap="off" spellcheck="false"></textarea>
-          </div>
-        </div>
-      </section>
-
-      <div id="resize-editor" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize code editor panel" title="Drag to resize the code editor" tabindex="0"></div>
-
-      <section class="stage" aria-label="Interactive 3D MeArm viewer">
-        <div id="scene" class="scene"></div>
-        <div id="freeform-constraints" class="freeform-constraints" aria-label="Free form coordinate limits" hidden>
-          <strong>Free-form limits</strong>
-          <span><b class="axis-x">X</b><span>−100 to +100 <small>mm</small></span></span>
-          <span><b class="axis-y">Y</b><span>100 to 200 <small>mm</small></span></span>
-          <span><b class="axis-z">Z</b><span>0 to 150 <small>mm</small></span></span>
-        </div>
-        <div class="viewport-toolbar" role="toolbar" aria-label="3D viewport tools">
-          <div class="viewport-tool-group">
-            <button id="fit-camera" class="viewport-tool" type="button" aria-label="Fit robot to view" title="Fit robot and path to view">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4M10 2h4v4M14 10v4h-4M6 14H2v-4" /></svg><span>Fit</span>
-            </button>
-            <button id="reset-camera" class="viewport-tool" type="button" aria-label="Reset view" title="Reset camera to the default view">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6A5.2 5.2 0 1 1 3 10.3M3.2 6V2.7M3.2 6h3.3" /></svg><span>Reset</span>
-            </button>
-            <label class="camera-preset-control" title="Choose a camera preset">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m8 2 5 2.7v6.6L8 14l-5-2.7V4.7L8 2Zm0 0v5.8m5-3.1L8 7.8 3 4.7m5 3.1V14" /></svg>
-              <select id="camera-preset" aria-label="Camera preset">
-                <option value="isometric" selected>Isometric</option>
-                <option value="front">Front</option>
-                <option value="back">Back</option>
-                <option value="left">Left</option>
-                <option value="right">Right</option>
-                <option value="top">Top</option>
-                <option value="custom" disabled>Custom</option>
-              </select>
-            </label>
-          </div>
-          <span class="viewport-toolbar-divider" aria-hidden="true"></span>
-          <div class="viewport-tool-group viewport-visibility-tools">
-            <label class="viewport-toggle" title="Show or hide the motion path"><input id="toggle-path" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 12.5c2.5-5 4.5-1.2 6.3-5.2 1-2.2 2.4-2.8 4.7-3.8" /><circle cx="2.5" cy="12.5" r="1" /><circle cx="13.5" cy="3.5" r="1" /></svg><span>Path</span></label>
-            <label class="viewport-toggle" title="Show or hide the servo-limited reachable task space"><input id="toggle-task-space" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 11.8 5 4.2l5-1.7 3.5 4.2-2.2 6.8-6.8.1-2-1.8Z" /><path d="m5 4.2 2.8 3.1 5.7-.6M7.8 7.3l3.5 6.2M7.8 7.3l-3.3 6.3" /></svg><span>Task space</span></label>
-            <label class="viewport-toggle" title="Show or hide the floor grid"><input id="toggle-grid" type="checkbox" checked /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h11v11h-11zM2.5 8h11M8 2.5v11" /></svg><span>Grid</span></label>
-            <label class="viewport-toggle" title="Show or hide the scene axes"><input id="toggle-axes" type="checkbox" /><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12V4m0 8h8M4 12l5-5" /></svg><span>Axes</span></label>
-          </div>
-        </div>
-      </section>
-
-      <div id="resize-inspector" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize inspector panel" title="Drag to resize the inspector" tabindex="0"></div>
-
-      <aside class="inspector" aria-label="Motion inspector">
-        <header class="inspector-head"><p class="eyebrow">Now running</p><h2 id="dance-title">Instructor dance</h2></header>
-        <details class="inspector-section command-section readout" open>
-          <summary><span id="command-title" class="section-label">Current command</span></summary>
-          <div class="section-body">
-            <button id="source-line" class="source-link" type="button">Line 1</button>
-            <code id="command">arm.moveToXYZ(0, 100, 50);</code>
-          </div>
-        </details>
-        <details class="inspector-section position-section" open>
-          <summary><span id="position-title" class="section-label">Claw position</span></summary>
-          <div class="section-body">
-            <dl class="engineering-values" aria-label="Claw coordinates">
-              <div><dt class="axis-x">X</dt><dd><strong id="x-value">0.0</strong><span class="value-unit">mm</span></dd></div>
-              <div><dt class="axis-y">Y</dt><dd><strong id="y-value">100.0</strong><span class="value-unit">mm</span></dd></div>
-              <div><dt class="axis-z">Z</dt><dd><strong id="z-value">50.0</strong><span class="value-unit">mm</span></dd></div>
-            </dl>
-          </div>
-        </details>
-        <details class="inspector-section joints-section" open>
-          <summary><span id="joints-title" class="section-label">Joint angles</span></summary>
-          <div class="section-body">
-            <dl class="engineering-values" aria-label="Joint angles">
-              <div><dt>Base</dt><dd><strong id="base-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-              <div><dt>Shoulder</dt><dd><strong id="shoulder-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-              <div><dt>Elbow</dt><dd><strong id="elbow-angle">0.0</strong><span class="value-unit">°</span></dd></div>
-            </dl>
-          </div>
-        </details>
-        <section class="inspector-section transport playback-section" aria-labelledby="playback-title">
-          <h3 id="playback-title" class="section-label">Playback</h3>
-          <div class="transport-buttons" role="group" aria-label="Playback transport">
-            <button id="previous-command" class="transport-button" type="button" aria-label="Previous command" title="Previous command"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 3.4v9.2" /><path class="icon-solid" d="M12.2 3.9v8.2L6.4 8l5.8-4.1Z" /></svg></button>
-            <button id="restart" class="transport-button" type="button" aria-label="Restart" title="Restart"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6A5.2 5.2 0 1 1 3 10.3M3.2 6V2.7M3.2 6h3.3" /></svg></button>
-            <button id="play" class="transport-button transport-play" type="button" aria-pressed="false" aria-label="Play" title="Play (Space)">
-              <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path class="icon-solid" d="M5.2 3.2v9.6L12.8 8 5.2 3.2Z" /></svg>
-              <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.6 3.4v9.2M10.4 3.4v9.2" /></svg>
-            </button>
-            <button id="next-command" class="transport-button" type="button" aria-label="Next command" title="Next command"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.8 3.4v9.2" /><path class="icon-solid" d="M3.8 3.9v8.2L9.6 8 3.8 3.9Z" /></svg></button>
-            <select id="speed" aria-label="Playback speed" title="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
-            <label class="repeat-toggle" title="Repeat the dance loop"><input id="repeat" type="checkbox" /><span>Repeat</span></label>
-          </div>
-        </section>
-        <section class="inspector-section timeline-section" aria-labelledby="timeline-title">
-          <h3 id="timeline-title" class="section-label">Execution timeline</h3>
-          <div class="timeline-track">
-            <input id="timeline" class="timeline" type="range" min="0" step="1" value="0" aria-label="Dance timeline" />
-            <div id="timeline-ticks" class="timeline-ticks" aria-hidden="true"></div>
-          </div>
-          <div class="time-row">
-            <span><small>Elapsed</small><strong id="current-time">0:00.0</strong></span>
-            <span><small>Total</small><strong id="duration">0:00.0</strong></span>
-          </div>
-        </section>
-        <details class="inspector-section presets-section" open>
-          <summary><span id="presets-title" class="section-label">Preset commands</span><span id="preset-copy-status" class="preset-copy-status" role="status" aria-live="polite">Click to copy</span></summary>
-          <div class="section-body">
-            <div class="preset-list" aria-label="Approved pose commands">
-              ${presetCommandButtons}
-            </div>
-            <div class="delay-command-group">
-              <span class="delay-command-label">Delay</span>
-              <div class="delay-command-row" aria-label="Delay commands">
-                ${delayCommandButtons}
-              </div>
-            </div>
-            <div class="claw-command-group">
-              <span class="claw-command-label">Claw</span>
-              <div class="claw-command-row" aria-label="Claw commands">
-                ${clawCommandButtons}
-              </div>
-            </div>
-          </div>
-        </details>
-        <section class="inspector-section safety-section" aria-labelledby="safety-title">
-          <h3 id="safety-title" class="section-label">Physical-robot safety</h3>
-          <p class="safety-note"><strong>Preview only.</strong> Confirm calibration, power, clearance, and each pose on the physical arm.</p>
-        </section>
-      </aside>
-    </main>
-
-    <footer class="statusbar" aria-label="Workspace status">
-      <div class="statusbar-group">
-        <span id="status" class="status valid" role="status" aria-live="polite"><span aria-hidden="true"></span>Valid</span>
-        <span id="editor-state" class="statusbar-item">Ready</span>
-        <span id="statusbar-message" class="statusbar-item statusbar-message success" aria-hidden="true">Instructor dance is ready to preview.</span>
-      </div>
-      <div class="statusbar-group">
-        <span class="statusbar-item">Pose <span id="pose-name">HOME</span></span>
-        <span id="camera-view" class="statusbar-item">Isometric view</span>
-        <span id="code-count" class="statusbar-item">0 lines</span>
-        <span class="statusbar-item statusbar-hint">Ctrl + Enter previews · Drag to orbit · Scroll to zoom</span>
-        <span class="axis-key" aria-label="Axis colors: X red, Y green, Z blue" title="Axis colors: X red, Y green, Z blue"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></span>
-      </div>
-    </footer>
-  </div>
-
-  <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
-    <form id="settings-form" method="dialog">
-      <div class="settings-head"><div><p class="eyebrow">Instructor controls</p><h2 id="settings-title">Robot settings</h2></div><button id="settings-close" class="close-button secondary-button" type="button" aria-label="Close settings">Close</button></div>
-      <p class="settings-intro">These values change only the preview. They do not calibrate the physical robot.</p>
-      <div id="settings-error" class="settings-error" role="alert" hidden></div>
-      <fieldset><legend>Arm geometry <small>millimeters</small></legend><div class="field-grid three">
-        <label>L1 · upper arm<input id="setting-l1" type="number" step="0.1" required /></label><label>L2 · forearm<input id="setting-l2" type="number" step="0.1" required /></label><label>L3 · hand offset<input id="setting-l3" type="number" step="0.1" required /></label>
-      </div></fieldset>
-      <fieldset><legend>Home position <small>millimeters</small></legend><div class="field-grid three">
-        <label>Home X<input id="setting-home-x" type="number" step="0.1" required /></label><label>Home Y<input id="setting-home-y" type="number" step="0.1" required /></label><label>Home Z<input id="setting-home-z" type="number" step="0.1" required /></label>
-      </div></fieldset>
-      <fieldset><legend>Servo limits <small>degrees</small></legend><div class="limit-grid">
-        <span></span><strong>Minimum</strong><strong>Maximum</strong>
-        <label for="setting-base-min">Base</label><input id="setting-base-min" aria-label="Base minimum angle" type="number" step="0.1" required /><input id="setting-base-max" aria-label="Base maximum angle" type="number" step="0.1" required />
-        <label for="setting-shoulder-min">Shoulder</label><input id="setting-shoulder-min" aria-label="Shoulder minimum angle" type="number" step="0.1" required /><input id="setting-shoulder-max" aria-label="Shoulder maximum angle" type="number" step="0.1" required />
-        <label for="setting-elbow-min">Elbow</label><input id="setting-elbow-min" aria-label="Elbow minimum angle" type="number" step="0.1" required /><input id="setting-elbow-max" aria-label="Elbow maximum angle" type="number" step="0.1" required />
-      </div></fieldset>
-      <div class="settings-actions"><button id="settings-reset" class="secondary-button" type="button">Reset defaults</button><button class="preview-button" type="submit" value="apply">Apply and preview</button></div>
-    </form>
-  </dialog>
-`;
+// The workspace markup is static in index.html. Only the copyable command
+// chips are generated, because they derive from DEFAULT_PROFILE.approvedPoses.
+renderPresetCommands();
 
 const get = <T extends HTMLElement>(id: string): T => {
   const element = document.querySelector<T>(`#${id}`);
@@ -262,7 +21,7 @@ const get = <T extends HTMLElement>(id: string): T => {
 
 const editor = get<HTMLTextAreaElement>("code-editor");
 const highlightOutput = get<HTMLElement>("code-highlight");
-const sampleSelect = get<HTMLSelectElement>("sample-select");
+const exampleDialog = get<HTMLDialogElement>("example-dialog");
 const sceneContainer = get<HTMLElement>("scene");
 const range = get<HTMLInputElement>("timeline");
 const playButton = get<HTMLButtonElement>("play");
@@ -286,10 +45,15 @@ let lastStatus = "";
 let copyFeedbackTimer: number | undefined;
 let activeMode: SampleMode = "instructor";
 
+/** Shared by the gutter, the highlight overlay, and every scroll calculation.
+ *  Must equal the 20px line height declared in src/styles.css. */
+const EDITOR_LINE_HEIGHT = 20;
+
 function loadSample(name: SampleMode): void {
   activeMode = name;
   editor.value = samples[name].source;
-  sampleSelect.value = name;
+  lastSelection = null;
+  get("example-name").textContent = samples[name].title;
   get("dance-title").textContent = samples[name].title;
   get("freeform-constraints").hidden = name !== "freeform";
   dirty = false;
@@ -308,7 +72,7 @@ function compileCurrent(profile = activeProfile): boolean {
     playing = false;
     syncPlayButton();
     setPlaybackEnabled(false);
-    showEditorMessage("error", result.message, result.line);
+    showEditorMessage("error", result.message, result.line, result.code);
     if (result.line) revealLine(result.line);
     setStatus("invalid", "Code error");
     return false;
@@ -328,17 +92,16 @@ function compileCurrent(profile = activeProfile): boolean {
   currentTime = 0;
   range.max = String(Math.max(1, activeTimeline.loopDurationMs));
   renderCommandMarkers();
-  renderTimelineTicks();
+  renderTimelineSegments();
   get("duration").textContent = formatTime(activeTimeline.loopDurationMs);
   dirty = false;
   get("editor-state").textContent = "Preview current";
   setPlaybackEnabled(true);
-  sampleSelect.querySelector<HTMLOptionElement>('option[value="custom"]')!.disabled = false;
 
   const invalid = activeTimeline.diagnostics.find((item) => item.severity === "invalid");
   const caution = activeTimeline.diagnostics.find((item) => item.severity === "caution");
-  if (invalid) showEditorMessage("error", invalid.message, invalid.location?.line);
-  else if (caution) showEditorMessage("warning", caution.message, caution.location?.line);
+  if (invalid) showEditorMessage("error", invalid.message, invalid.location?.line, invalid.code);
+  else if (caution) showEditorMessage("warning", caution.message, caution.location?.line, caution.code);
   else showEditorMessage("success", `${activeTimeline.loop.length} commands are ready to preview.`);
   updateFrame();
   return true;
@@ -412,14 +175,94 @@ function setStatus(kind: "valid" | "caution" | "invalid", label: string): void {
   element.innerHTML = `<span aria-hidden="true"></span>${label}`;
 }
 
-function showEditorMessage(kind: "success" | "warning" | "error", message: string, line?: number): void {
+/**
+ * Beginner-facing guidance per diagnostic code.
+ *
+ * The parser's own messages state what is wrong; these say what to do about it.
+ * For a first programming lesson that difference matters: "delay() requires a
+ * non-negative integer literal" describes a rule, while the hint shows the
+ * shape of a line that works.
+ */
+const ERROR_HINTS: Readonly<Record<string, string>> = {
+  MISSING_ARM: "Near the top of the sketch, declare the robot once: MeArm arm;",
+  MISSING_SETUP: "Every Arduino sketch needs a setup() function. It runs once when the board starts.",
+  MISSING_LOOP: "Every Arduino sketch needs a loop() function. It runs over and over after setup().",
+  MISSING_BEGIN: "Inside setup(), start the arm with the four pin numbers: arm.begin(11, 10, 9, 6);",
+  MULTIPLE_ARMS: "This preview animates one arm. Keep a single MeArm declaration.",
+  DUPLICATE_SETUP: "There can only be one setup(). Merge the two into a single function.",
+  DUPLICATE_LOOP: "There can only be one loop(). Merge the two into a single function.",
+  UNCLOSED_FUNCTION: "A closing brace } is missing. Check that every { has a matching }.",
+  INVALID_DELAY: "delay() takes a whole number of milliseconds, like delay(500);",
+  INVALID_PIN: "Pin numbers must be whole numbers, like int basePin = 11;",
+  UNKNOWN_PIN: "Use a pin variable you declared above setup(), or the number itself.",
+  UNKNOWN_RECEIVER: "Commands start with the arm you declared, like arm.moveToXYZ(0, 100, 50);",
+  UNSUPPORTED_METHOD: "This preview understands moveToXYZ, snapToXYZ, openClaw, closeClaw, begin, and delay.",
+  UNSUPPORTED_FUNCTION: "Custom functions are not supported yet. Put the commands directly inside loop().",
+  UNSUPPORTED_STATEMENT: "Only movement, claw, and delay commands can be previewed. Variables, loops, and if statements are not supported yet.",
+  INVALID_NUMBER: "Coordinates must be plain numbers, like arm.moveToXYZ(0, 100, 50);",
+  EMPTY_LOOP: "Add at least one command inside loop() — try a pose from the Preset commands strip.",
+  COORDINATE_OUT_OF_BOUNDS: "Free form mode limits how far the arm may reach. Pick a coordinate inside the limits shown on the viewport.",
+  INVALID_PROFILE: "Check the values in Simulation profile; one of them is not usable.",
+};
+
+/**
+ * Renders a diagnostic beside the editor.
+ *
+ * The concise text is what the live region announces. The offending source line
+ * is repeated visually and marked aria-hidden, because the editor has already
+ * selected that line and reading it twice helps nobody.
+ */
+function showEditorMessage(kind: "success" | "warning" | "error", message: string, line?: number, code?: string): void {
   const text = line ? `Line ${line}: ${message}` : message;
   const element = get("editor-message");
   element.className = `editor-message ${kind}`;
-  element.textContent = text;
+
+  const parts = [`<p class="editor-message-text">${escapeHtml(text)}</p>`];
+  const sourceLine = line ? editor.value.split("\n")[line - 1] : undefined;
+  if (sourceLine?.trim()) {
+    parts.push(`<pre class="editor-message-source" aria-hidden="true">${escapeHtml(sourceLine.trim())}</pre>`);
+  }
+  const hint = code ? ERROR_HINTS[code] : undefined;
+  if (hint) parts.push(`<p class="editor-message-hint" aria-hidden="true">${escapeHtml(hint)}</p>`);
+  element.innerHTML = parts.join("");
+
   const summary = get("statusbar-message");
   summary.className = `statusbar-item statusbar-message ${kind}`;
   summary.textContent = text;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"]/g, (character) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character] ?? character);
+}
+
+/**
+ * Mirrors the sketch's own lesson into the chrome.
+ *
+ * Re-read on every edit so the step line numbers stay correct as the student
+ * types, but only re-rendered when the lesson actually changes — otherwise a
+ * keystroke would rebuild the buttons and drop focus from one mid-use.
+ */
+let lessonSignature = "";
+function renderLesson(): void {
+  const lesson = extractLesson(editor.value);
+  const strip = get("lesson-strip");
+  strip.hidden = lesson === null;
+  if (!lesson) { lessonSignature = ""; return; }
+
+  const signature = JSON.stringify(lesson);
+  if (signature === lessonSignature) return;
+  lessonSignature = signature;
+
+  get("lesson-goal").textContent = lesson.goal ?? "";
+  get("lesson-steps").innerHTML = lesson.steps.map((step) => `
+    <button class="lesson-step" type="button" data-line="${step.line}" title="Go to line ${step.line}">
+      <span class="lesson-step-number">${step.number}</span>
+      <span class="lesson-step-body">
+        <span class="lesson-step-title">${escapeHtml(step.title)}</span>
+        <span class="lesson-step-detail">${escapeHtml(step.detail)}</span>
+      </span>
+    </button>`).join("");
 }
 
 function updateGutter(): void {
@@ -427,6 +270,7 @@ function updateGutter(): void {
   get("line-numbers").innerHTML = Array.from({ length: count }, (_, index) => `<div class="line-number" data-line="${index + 1}"><span aria-hidden="true">${index + 1}</span></div>`).join("");
   get("code-count").textContent = `${count} line${count === 1 ? "" : "s"}`;
   highlightOutput.innerHTML = highlightArduino(editor.value);
+  renderLesson();
   syncEditorScroll();
   setActiveLine(activeLine, true);
 }
@@ -442,8 +286,7 @@ function revealLine(line: number): void {
   const selected = lineRange(editor.value, line);
   editor.focus();
   editor.setSelectionRange(selected.start, selected.end);
-  const lineHeight = 20;
-  editor.scrollTop = Math.max(0, (line - 4) * lineHeight);
+  editor.scrollTop = Math.max(0, (line - 4) * EDITOR_LINE_HEIGHT);
   syncEditorScroll();
   setActiveLine(line, true);
 }
@@ -466,13 +309,41 @@ function setPlaybackEnabled(enabled: boolean): void {
 }
 function formatTime(milliseconds: number): string { const seconds = milliseconds / 1000; return `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, "0")}`; }
 
-function renderTimelineTicks(): void {
-  const ticks = get("timeline-ticks");
-  const duration = activeTimeline.loopDurationMs;
-  if (duration <= 0) { ticks.innerHTML = ""; return; }
-  ticks.innerHTML = activeTimeline.loop
-    .filter((segment) => segment.command.type === "move" || segment.command.type === "snap")
-    .map((segment) => `<span style="left:${((segment.endMs / duration) * 100).toFixed(2)}%"></span>`)
+/**
+ * Draws one proportional block per command, colored by what the robot is doing.
+ *
+ * The product specification asks the interface to distinguish movement time
+ * from explicit delay() time. A slider cannot: it renders a program as a
+ * featureless span. Blocks make the shape of the program visible without a word
+ * of explanation — in the student starter sketch six of its 8.65 seconds are
+ * delay(), which no student reads out of a scrubber.
+ *
+ * Indigo is the motion-path color from the 3D scene, so indigo consistently
+ * means "the robot is doing something", with a darker step for the claw.
+ * Waiting is neutral: it is the absence of motion and needs no hue of its own.
+ */
+function segmentKind(type: Command["type"]): "move" | "claw" | "wait" {
+  switch (type) {
+    case "move":
+    case "snap":
+    case "begin":
+      return "move";
+    case "openClaw":
+    case "closeClaw":
+      return "claw";
+    case "delay":
+      return "wait";
+  }
+}
+
+function renderTimelineSegments(): void {
+  const container = get("timeline-segments");
+  if (activeTimeline.loopDurationMs <= 0) { container.innerHTML = ""; return; }
+  container.innerHTML = activeTimeline.loop
+    .map((segment) => {
+      const durationMs = segment.endMs - segment.startMs;
+      return `<span class="timeline-segment is-${segmentKind(segment.command.type)}" style="flex-grow:${durationMs}"></span>`;
+    })
     .join("");
 }
 
@@ -511,11 +382,76 @@ function visitCommand(index: number): void {
   updateFrame();
 }
 
-async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
-  const command = button.dataset.command;
-  const presetName = button.dataset.presetName;
-  if (!command || !presetName) return;
+/**
+ * The preset chips are the highest-frequency control in the workspace —
+ * classroom use shows students reaching for them constantly — so a click puts
+ * the command straight into the sketch at the caret instead of onto the
+ * clipboard. That removes the click / click / position / paste round trip that
+ * was repeated dozens of times a lesson.
+ *
+ * It does not remove the decision that matters. The student still chooses where
+ * the command goes by placing the caret, which is the actual lesson about
+ * command order; only the clipboard hop disappears. Alt-click still copies, for
+ * pasting somewhere else.
+ */
+let lastSelection: { start: number; end: number } | null = null;
 
+function rememberSelection(): void {
+  lastSelection = { start: editor.selectionStart, end: editor.selectionEnd };
+}
+
+/**
+ * Where a command lands when the student has not placed a caret yet — the last
+ * line inside `loop()`, which is the final block in every supported sketch.
+ * Falls back to the end of the document if that shape is not found.
+ */
+function defaultInsertPosition(): number {
+  const match = /\n[^\S\n]*\}[^\S\n]*\s*$/.exec(editor.value);
+  return match ? match.index : editor.value.length;
+}
+
+function flashPreset(button: HTMLButtonElement, message: string): void {
+  window.clearTimeout(copyFeedbackTimer);
+  document.querySelector<HTMLButtonElement>(".copy-command.used")?.classList.remove("used");
+  button.classList.add("used");
+  get("preset-copy-status").textContent = message;
+  copyFeedbackTimer = window.setTimeout(() => {
+    button.classList.remove("used");
+    get("preset-copy-status").textContent = "Click to insert";
+  }, 1800);
+}
+
+function insertCommand(command: string, presetName: string, button: HTMLButtonElement): void {
+  const target = document.activeElement === editor
+    ? { start: editor.selectionStart, end: editor.selectionEnd }
+    : lastSelection ?? { start: defaultInsertPosition(), end: defaultInsertPosition() };
+
+  // Keep one statement per line: if the caret sits after code, start a new line
+  // and match the indentation of the line the student is on.
+  const lineStart = editor.value.lastIndexOf("\n", target.start - 1) + 1;
+  const indent = /^[ \t]*/.exec(editor.value.slice(lineStart))?.[0] ?? "";
+  const precedingText = editor.value.slice(lineStart, target.start);
+  const insertion = precedingText.trim() ? `\n${indent}${command}` : command;
+
+  editor.focus();
+  editor.setRangeText(insertion, target.start, target.end, "end");
+  rememberSelection();
+  editor.dispatchEvent(new Event("input", { bubbles: true }));
+
+  // Keep the insertion point on screen without stealing the caret, which
+  // revealLine would do by selecting the whole line.
+  const line = editor.value.slice(0, editor.selectionStart).split("\n").length;
+  const visibleLines = editor.clientHeight / EDITOR_LINE_HEIGHT;
+  const firstVisible = editor.scrollTop / EDITOR_LINE_HEIGHT;
+  if (line - 1 < firstVisible || line > firstVisible + visibleLines - 1) {
+    editor.scrollTop = Math.max(0, (line - Math.floor(visibleLines / 2)) * EDITOR_LINE_HEIGHT);
+  }
+  syncEditorScroll();
+  setActiveLine(line, true);
+  flashPreset(button, `${presetName} inserted`);
+}
+
+async function copyPresetCommand(command: string, presetName: string, button: HTMLButtonElement): Promise<void> {
   try {
     await navigator.clipboard.writeText(command);
   } catch {
@@ -533,16 +469,7 @@ async function copyPresetCommand(button: HTMLButtonElement): Promise<void> {
       return;
     }
   }
-
-  window.clearTimeout(copyFeedbackTimer);
-  const previousButton = document.querySelector<HTMLButtonElement>(".copy-command.copied");
-  previousButton?.classList.remove("copied");
-  button.classList.add("copied");
-  get("preset-copy-status").textContent = `${presetName} copied`;
-  copyFeedbackTimer = window.setTimeout(() => {
-    button.classList.remove("copied");
-    get("preset-copy-status").textContent = "Click to copy";
-  }, 1800);
+  flashPreset(button, `${presetName} copied`);
 }
 
 function stepCommand(direction: -1 | 1): void {
@@ -603,11 +530,43 @@ const settingIds: Record<keyof ProfileValues, string> = {
 function writeSettings(values: ProfileValues): void { for (const key of Object.keys(settingIds) as (keyof ProfileValues)[]) get<HTMLInputElement>(settingIds[key]).value = String(values[key]); }
 function readSettings(): ProfileValues { const result = {} as ProfileValues; for (const key of Object.keys(settingIds) as (keyof ProfileValues)[]) result[key] = Number(get<HTMLInputElement>(settingIds[key]).value); return result; }
 
-editor.addEventListener("input", () => { dirty = true; get("editor-state").textContent = "Changes not previewed"; sampleSelect.value = "custom"; updateGutter(); });
+editor.addEventListener("input", () => { dirty = true; get("editor-state").textContent = "Changes not previewed"; get("example-name").textContent = "Edited sketch"; updateGutter(); });
 editor.addEventListener("scroll", syncEditorScroll);
+for (const eventName of ["keyup", "mouseup", "blur", "select"]) {
+  editor.addEventListener(eventName, rememberSelection);
+}
 editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); compileCurrent(); } });
-sampleSelect.addEventListener("change", () => {
-  if (isSampleMode(sampleSelect.value)) loadSample(sampleSelect.value);
+/**
+ * Measured on first open rather than written down, so a card can never claim a
+ * command count or duration the sketch no longer has.
+ */
+const exampleStats = new Map<SampleMode, string>();
+function measureExamples(): void {
+  if (exampleStats.size > 0) return;
+  for (const mode of EXAMPLE_GROUPS.flatMap((group) => group.modes)) {
+    const result = compilePreview(
+      samples[mode].source,
+      DEFAULT_PROFILE,
+      mode === "freeform" ? FREE_FORM_BOUNDS : undefined,
+    );
+    if (!result.ok) continue;
+    const commands = result.timeline.loop.length;
+    exampleStats.set(mode, `${commands} command${commands === 1 ? "" : "s"} · ${formatTime(result.timeline.loopDurationMs)} loop`);
+  }
+}
+
+get("example-open").addEventListener("click", () => {
+  measureExamples();
+  renderExampleGallery(get("example-groups"), activeMode, exampleStats);
+  exampleDialog.showModal();
+});
+get("example-close").addEventListener("click", () => exampleDialog.close());
+get("example-groups").addEventListener("click", (event) => {
+  const card = (event.target as HTMLElement).closest<HTMLButtonElement>(".example-card");
+  const mode = card?.dataset.mode;
+  if (!mode || !isSampleMode(mode)) return;
+  exampleDialog.close();
+  loadSample(mode);
 });
 get("preview").addEventListener("click", () => compileCurrent());
 get("reset-code").addEventListener("click", resetCode);
@@ -623,6 +582,10 @@ get("line-numbers").addEventListener("click", (event) => {
   visitCommand(Number(marker.dataset.commandIndex));
 });
 get("source-line").addEventListener("click", () => revealLine(activeLine));
+get("lesson-steps").addEventListener("click", (event) => {
+  const step = (event.target as HTMLElement).closest<HTMLButtonElement>(".lesson-step");
+  if (step?.dataset.line) revealLine(Number(step.dataset.line));
+});
 get("fit-camera").addEventListener("click", () => viewer.fitToView());
 get("reset-camera").addEventListener("click", () => viewer.resetCamera());
 cameraPresetSelect.addEventListener("change", () => {
@@ -633,7 +596,13 @@ get<HTMLInputElement>("toggle-task-space").addEventListener("change", (event) =>
 get<HTMLInputElement>("toggle-grid").addEventListener("change", (event) => viewer.setGridVisible((event.currentTarget as HTMLInputElement).checked));
 get<HTMLInputElement>("toggle-axes").addEventListener("change", (event) => viewer.setAxesVisible((event.currentTarget as HTMLInputElement).checked));
 for (const button of document.querySelectorAll<HTMLButtonElement>(".copy-command")) {
-  button.addEventListener("click", () => void copyPresetCommand(button));
+  button.addEventListener("click", (event) => {
+    const command = button.dataset.command;
+    const presetName = button.dataset.presetName;
+    if (!command || !presetName) return;
+    if (event.altKey) void copyPresetCommand(command, presetName, button);
+    else insertCommand(command, presetName, button);
+  });
 }
 
 get("settings-open").addEventListener("click", () => { writeSettings(profileToValues(activeProfile)); get("settings-error").hidden = true; settingsDialog.showModal(); });

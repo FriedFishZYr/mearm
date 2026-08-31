@@ -2,7 +2,10 @@
 
 ## Code workflow
 
-The **Example** menu provides eight starting sketches:
+The **Example** button opens a gallery of eight starting sketches, grouped by
+what a student is meant to do with each one. Every card carries a short
+description, plus its command count and loop duration measured from the sketch
+itself:
 
 | Example | Intended use | Additional validation |
 | --- | --- | --- |
@@ -95,18 +98,31 @@ preview is stale triggers recompilation before Play can continue.
 
 ## Copyable classroom commands
 
-The **Preset commands** section copies complete `arm.moveToXYZ(...)` statements
-for HOME, LEFT, RIGHT, HIGH, and LOW. It also copies `delay(...)` statements for
-250, 500, 1000, and 2000 milliseconds, plus `arm.openClaw();` and
-`arm.closeClaw();`. Copy status is announced in a live status region, and a
-fallback copy path is used when the Clipboard API is not available.
+The **Preset commands** strip sits beneath the editor, in the same column as the
+code it feeds. It offers complete `arm.moveToXYZ(...)` statements for HOME,
+LEFT, RIGHT, HIGH, and LOW, `delay(...)` statements for 250, 500, 1000, and 2000
+milliseconds, and `arm.openClaw();` and `arm.closeClaw();`.
+
+Clicking a chip inserts the command into the sketch at the caret. If the caret
+sits after existing code, the command starts a new line and matches the
+surrounding indentation, so the sketch stays one statement per line. When the
+editor has not been focused yet, the command lands on the last line inside
+`loop()`.
+
+Inserting does not choose *where* the command goes; the student still does that
+by placing the caret, which is the point of the exercise. Only the clipboard
+round trip is removed.
+
+Alt-clicking a chip copies the command to the clipboard instead, for pasting
+elsewhere. Both actions are announced in a live status region, and a fallback
+copy path is used when the Clipboard API is not available.
 
 Presets are editing aids, not proof of physical safety. The approved pose list
 comes from the default profile and must still be checked on the classroom arm.
 
-## Instructor settings
+## Simulation profile
 
-The modal settings dialog exposes:
+The modal **Simulation profile** dialog exposes:
 
 - `L1`, `L2`, and `L3` in millimeters;
 - HOME `x`, `y`, and `z` in millimeters; and
