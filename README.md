@@ -5,6 +5,11 @@ beginner MeArm Arduino motion sketches. It parses a deliberately small and safe
 Arduino subset, builds a deterministic motion timeline, animates a simplified
 MeArm, and links each simulated command back to its source line.
 
+**Try it online:** <https://friedfishzyr.github.io/mearm/> — no install or
+account needed. The companion
+[Task Space Lab](https://friedfishzyr.github.io/mearm/task-space-lab.html)
+lesson is hosted alongside it.
+
 The viewer helps students understand command order and helps instructors catch
 unreachable positions or configured servo-limit violations before uploading a
 sketch. It does **not** replace calibration, clearance checks, or testing on the
@@ -26,8 +31,8 @@ manual browser pass; see the
 ## Features
 
 - Eight editable examples: Instructor dance, Student starter, Pick and place,
-  Pre-programmed sorting line, Palletizing, House shape, Cyberpunk beat, and
-  Free form.
+  Pre-programmed sorting line, Palletizing, House shape dance, Cyberpunk beat
+  dance, and Free form.
 - Safe parsing of sequential `begin`, `moveToXYZ`, `snapToXYZ`, claw, and
   `delay` calls; pasted code is never executed.
 - Deterministic movement timing based on the classroom MeArm profile.
@@ -43,7 +48,11 @@ manual browser pass; see the
   boundary, grid, axes, and coordinate labels in the 3D view.
 - Instructor-editable link lengths, HOME coordinates, and servo-angle limits.
 - Static production output with no required account, backend, analytics, or
-  external runtime assets.
+  external runtime assets. Asset paths are relative, so `dist/` works from any
+  folder or sub-path.
+- A standalone [Task Space Lab](public/task-space-lab.html) lesson showing how
+  servo-angle limits map to the reachable workspace (see its
+  [guide](public/TASK_SPACE_LAB.md)).
 
 ## Quick start
 
@@ -82,6 +91,21 @@ limits before normal kinematic and servo-limit validation:
 
 Run `npm run build` before `npm run verify:offline`, or use the complete
 `npm run check` gate.
+
+## Deployment
+
+The live site is published to GitHub Pages by
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+Every push to `main` runs the full `npm run check` gate on Node 22 and, only if
+it passes, publishes `dist/`. The workflow can also be started manually from
+the repository's **Actions** tab.
+
+One-time setup: in the GitHub repository, open **Settings → Pages** and set
+**Build and deployment → Source** to **GitHub Actions**.
+
+Because the build uses relative asset paths (`base: "./"` in
+[`vite.config.ts`](vite.config.ts)), the same `dist/` folder can also be copied
+to any other static host or shared drive without changes.
 
 ## Supported sketch shape
 
@@ -130,8 +154,10 @@ src/core/      parser, profile, kinematics, timeline, and shared types
 src/samples/   the eight bundled Arduino sketches
 src/viewer/    Three.js model, scene, and playback sampling
 tests/         unit, integration, interface-contract, and fixture coverage
+public/        static files copied as-is, including the Task Space Lab page
 scripts/       release and offline verification helpers
 docs/          product, architecture, operation, validation, and safety docs
+.github/       GitHub Pages deployment workflow
 ```
 
 ## Documentation

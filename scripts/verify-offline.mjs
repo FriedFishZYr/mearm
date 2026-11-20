@@ -12,8 +12,9 @@ if (external.length > 0) {
   throw new Error(`External runtime assets found: ${external.join(", ")}`);
 }
 
-for (const reference of references.filter((item) => item.startsWith("/"))) {
-  const clean = reference.split(/[?#]/, 1)[0].replace(/^\//, "");
+const local = references.filter((item) => item.startsWith("/") || item.startsWith("./"));
+for (const reference of local) {
+  const clean = reference.split(/[?#]/, 1)[0].replace(/^\.?\//, "");
   await access(join(dist, clean));
 }
 
